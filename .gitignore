@@ -333,3 +333,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# pixi environments
+.pixi
+*.egg-info
