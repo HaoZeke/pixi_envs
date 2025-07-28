@@ -1,0 +1,13 @@
+[workspace]
+authors = ["Rohit Goswami <rgoswami[at]ieee.org>"]
+channels = ["conda-forge"]
+name = "atomistic-cookbook"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+nox = ">=2025.5.1,<2026"
+pyyaml = ">=6.0.2,<7"
+docutils = ">=0.21.2,<0.22"
