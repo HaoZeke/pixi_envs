@@ -1,0 +1,10 @@
+[workspace]
+authors = ["Rohit Goswami <rog32@hi.is>"]
+channels = ["conda-forge"]
+name = "pixi_envs"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
