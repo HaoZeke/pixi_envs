@@ -1,0 +1,14 @@
+* About
+Development environments with ~pixi~.
+** Usage
+- Get ~pixi~
+- Setup the upstream repository below the corresponding ~pixi.toml~.
+- Profit.
+** Similar projects
+Conceptually this follows a series of out-of-build experiments:
+
+- [[https://github.com/HaoZeke/openblas_buildsys_snips][OpenBLAS build snippets]] :: Which was used to work on ~meson~ [[https://github.com/mesonbuild/wrapdb/pull/1734][bindings to OpenBLAS]]
+- [[https://github.com/rgommers/pixi-dev-scipystack][pixi-dev-scipystack]] :: out-of-tree environments for the scientific python ecosystem
+
+* License
+MIT.
