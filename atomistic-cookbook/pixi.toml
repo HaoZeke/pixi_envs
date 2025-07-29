@@ -11,3 +11,19 @@ version = "0.1.0"
 nox = ">=2025.5.1,<2026"
 pyyaml = ">=6.0.2,<7"
 docutils = ">=0.21.2,<0.22"
+# TODO(rg): Add this upstream, not in requirements.txt
+requests = ">=2.32.4,<3"
+
+[environments]
+# There's basically one per file in atomistic-cookbook/examples
+lpr = {features = ["lpr"]}
+
+[feature.lpr.dependencies]
+python = "==3.11"
+pip = ">=25.1.1,<26"
+
+[feature.lpr.pypi-dependencies]
+ase = "==3.22.1"
+matplotlib = ">=3.10.3, <4"
+featomic = ">=0.6.1, <0.7"
+skmatter = ">=0.3"
