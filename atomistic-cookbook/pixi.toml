@@ -16,7 +16,8 @@ requests = ">=2.32.4,<3"
 
 [environments]
 # There's basically one per file in atomistic-cookbook/examples
-lpr = {features = ["lpr"]}
+lpr = {features = ["lpr", "jup"]}
+jup = {features = ["jup"]}
 
 [feature.lpr.dependencies]
 python = "==3.11"
@@ -27,3 +28,21 @@ ase = "==3.22.1"
 matplotlib = ">=3.10.3, <4"
 featomic = ">=0.6.1, <0.7"
 skmatter = ">=0.3"
+
+[feature.jup.dependencies]
+jupyterlab = ">=4.4.5,<5"
+jupytext = ">=1.17.2,<2"
+
+[feature.jup.tasks]
+to-ipynb = { cmd = "jupytext examples/**/*.py --to ipynb --update", cwd = "atomistic-cookbook" }
+
+[feature.jup.tasks.serve]
+depends-on = [ { task = "to-ipynb" } ]
+cwd = "atomistic-cookbook"
+args = [ {"arg" = "port", "default" = "8889"} ]
+cmd = """
+jupyter lab --ServerApp.allow_remote_access=1 \
+  --ServerApp.open_browser=False \
+  --ContentsManager.allow_hidden=True \
+  --port={{ port }}
+"""
