@@ -84,8 +84,13 @@ jupytext = ">=1.17.2,<2"
 sphinx-gallery = ">=0.19.0,<0.20"
 pypandoc = ">=1.15,<2"
 
-[feature.jup.tasks]
-py-sphinx = { cmd = "python src/ipynb-to-gallery.py examples/{{ example }}/*.ipynb", cwd = "atomistic-cookbook", args = ["example"] }
+[feature.jup.tasks.py-sphinx]
+args = ["example"]
+cwd = "atomistic-cookbook"
+cmd = """
+python src/ipynb-to-gallery.py \
+       examples/{{ example }}/*.ipynb
+"""
 
 [feature.jup.tasks.serve]
 depends-on = [
