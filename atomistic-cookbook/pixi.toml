@@ -1,6 +1,6 @@
 [workspace]
 authors = ["Rohit Goswami <rgoswami[at]ieee.org>"]
-channels = ["conda-forge"]
+channels = ["https://repo.prefix.dev/rg-forge", "conda-forge", "metatensor"]
 name = "atomistic-cookbook"
 platforms = ["linux-64"]
 version = "0.1.0"
@@ -23,7 +23,7 @@ docutils = ">=0.21.2,<0.22"
 # TODO(rg): Add this upstream, not in requirements.txt
 requests = ">=2.32.4,<3"
 # These are basically to build the entire nox set
-conda = ">=25.5.1,<26"
+#conda = ">=25.5.1,<26" # XXX(rg): This has a conflict due to fmt with eon!!
 conda-build = ">=25.5.0,<26"
 
 [environments]
@@ -33,6 +33,11 @@ conda-build = ">=25.5.0,<26"
 jup = {features = ["jup"]}
 # There's basically one per file in atomistic-cookbook/examples
 lpr = {features = ["lpr", "bldbase"]}
+eon-pet-neb = {features = ["eon-pet-neb", "bldbase"]}
+
+[feature.eon-pet-neb.dependencies]
+eon = ">=3.0.dev3,<4"
+ase = ">=3.25.0,<4"
 
 [feature.bldbase.dependencies]
 sphinx-gallery = ">=0.19.0,<0.20"
