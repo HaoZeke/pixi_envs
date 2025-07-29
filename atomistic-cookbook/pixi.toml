@@ -87,14 +87,6 @@ pypandoc = ">=1.15,<2"
 [feature.jup.tasks]
 py-sphinx = { cmd = "python src/ipynb-to-gallery.py examples/{{ example }}/*.ipynb", cwd = "atomistic-cookbook", args = ["example"] }
 
-[feature.jup.tasks.to-ipynb]
-cwd = "atomistic-cookbook"
-cmd = """
-jupytext examples/**/*.py \
-         --to ipynb --from py:nomarker \
-         --update --opt rst2md=false
-"""
-
 [feature.jup.tasks.serve]
 depends-on = [
 { task = "to-ipynb", environment = "lpr" },
