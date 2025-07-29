@@ -16,7 +16,7 @@ requests = ">=2.32.4,<3"
 
 [environments]
 # There's basically one per file in atomistic-cookbook/examples
-lpr = {features = ["lpr", "jup"]}
+lpr = {features = ["lpr"]}
 jup = {features = ["jup"]}
 
 [feature.lpr.dependencies]
@@ -32,9 +32,16 @@ skmatter = ">=0.3"
 [feature.jup.dependencies]
 jupyterlab = ">=4.4.5,<5"
 jupytext = ">=1.17.2,<2"
+sphinx-gallery = ">=0.19.0,<0.20"
 
-[feature.jup.tasks]
-to-ipynb = { cmd = "jupytext examples/**/*.py --to ipynb --update", cwd = "atomistic-cookbook" }
+[feature.jup.tasks.to-ipynb]
+cwd = "atomistic-cookbook"
+cmd = """
+cp ../jupytext.toml . && \
+jupytext examples/**/*.py \
+         --to ipynb --from py:sphinx \
+         --update --opt rst2md=true
+"""
 
 [feature.jup.tasks.serve]
 depends-on = [ { task = "to-ipynb" } ]
