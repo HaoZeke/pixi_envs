@@ -1,0 +1,31 @@
+* About
+A set of ~pixi~ environments to handle the sub-environments within the ~atomistic-cookbook~
+** Usage
+Clone the repository into this directory:
+#+begin_src bash
+# Most likely you'd want a fork though
+git clone git@github.com:lab-cosmo/atomistic-cookbook.git
+#+end_src
+Now each example has a corresponding ~pixi~ environment to assist interactive work.
+#+begin_src bash
+pixi s -e lpr
+cd atomistic-cookbook/examples/
+python lpr.py
+#+end_src
+** Interactivity
+Beyond the "production" environments for each example, we include environments
+to assist working on new recipes.
+*** Jupyter server
+For an interactive writing experience, the ~jup~ environment may be used. This
+can be used for interactive editing with the ~to-ipynb~ task:
+#+begin_src bash
+pixi r -e jup to-ipynb
+#+end_src
+Which will generate easy to work on variants of the ~.py~ files.
+#+begin_src bash
+pixi r -e jup serve
+#+end_src
+To get all the dependencies for a single example and the interactive usage, farm out to the environment of interest.
+#+begin_src bash
+pixi r -e lpr serve
+#+end_src
