@@ -7,6 +7,7 @@ version = "0.1.0"
 
 [tasks]
 gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
+nox_gen = { cmd = "nox -e {{ example }} -- --no-website", cwd = "atomistic-cookbook", args = ["example"] }
 
 [dependencies]
 nox = ">=2025.5.1,<2026"
@@ -14,6 +15,9 @@ pyyaml = ">=6.0.2,<7"
 docutils = ">=0.21.2,<0.22"
 # TODO(rg): Add this upstream, not in requirements.txt
 requests = ">=2.32.4,<3"
+# These are basically to build the entire nox set
+conda = ">=25.5.1,<26"
+conda-build = ">=25.5.0,<26"
 
 [environments]
 # There's basically one per file in atomistic-cookbook/examples
@@ -24,10 +28,13 @@ jup = {features = ["jup"]}
 python = "==3.11"
 pip = ">=25.1.1,<26"
 ipykernel = ">=6.29.5,<7"
+chemiscope = ">=0.8.6,<0.9"
+scikit-learn = ">=1.7.1,<2"
 
 [feature.lpr.tasks.register-kernel]
-# This one basically registers into jupyter Defined for each feature because the
-# ipykernel needs to be the one in the folder's environment
+# This one basically registers into jupyter.
+# It is defined for each feature because the ipykernel needs to be the one in
+# the folder's environment
 cmd = """
 python -m ipykernel install \
   --prefix "$(pixi r -e jup sh -c 'echo $CONDA_PREFIX')" \
@@ -36,7 +43,7 @@ python -m ipykernel install \
 """
 
 [feature.lpr.pypi-dependencies]
-ase = "==3.22.1"
+ase = ">=3.22.1"
 matplotlib = ">=3.10.3, <4"
 featomic = ">=0.6.1, <0.7"
 skmatter = ">=0.3"
