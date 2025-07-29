@@ -19,13 +19,14 @@ to assist working on new recipes.
 For an interactive writing experience, the ~jup~ environment may be used. This
 can be used for interactive editing with the ~to-ipynb~ task:
 #+begin_src bash
-pixi r -e jup to-ipynb
+pixi r -e lpr to-ipynb
 #+end_src
-Which will generate easy to work on variants of the ~.py~ files.
+Which will generate easy to work on variants of the ~.py~ files. If you would like to get them all...
 #+begin_src bash
 pixi r -e jup serve
 #+end_src
-To get all the dependencies for a single example and the interactive usage, farm out to the environment of interest.
+This builds each ~ipynb~ and registers the kernel for them within the Jupyter server. To get the ~py~ back:
 #+begin_src bash
-pixi r -e lpr serve
+pixi r -e jup py-sphinx lpr
 #+end_src
+There are additional ~nox~ based commands which echo the usage within the ~contributing~ guidelines of atomistic cookbook.
