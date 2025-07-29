@@ -6,7 +6,7 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-clean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
+gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
 
 [dependencies]
 nox = ">=2025.5.1,<2026"
@@ -49,10 +49,9 @@ sphinx-gallery = ">=0.19.0,<0.20"
 [feature.jup.tasks.to-ipynb]
 cwd = "atomistic-cookbook"
 cmd = """
-cp ../jupytext.toml . && \
 jupytext examples/**/*.py \
-         --to ipynb --from py:sphinx \
-         --update
+         --to ipynb --from py:nomarker \
+         --update --opt rst2md=false
 """
 
 [feature.jup.tasks.serve]
