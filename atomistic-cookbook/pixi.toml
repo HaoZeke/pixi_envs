@@ -84,8 +84,17 @@ jupytext = ">=1.17.2,<2"
 sphinx-gallery = ">=0.19.0,<0.20"
 pypandoc = ">=1.15,<2"
 
+[feature.jup.tasks.nbfmt]
+args = ["example"]
+cwd = "atomistic-cookbook"
+cmd = """
+jupytext --pipe black \
+       examples/{{ example }}/*.ipynb
+"""
+
 [feature.jup.tasks.py-sphinx]
 args = ["example"]
+depends-on = [{ "task" = "nbfmt", "args" = ["{{example}}"]}]
 cwd = "atomistic-cookbook"
 cmd = """
 python src/ipynb-to-gallery.py \
