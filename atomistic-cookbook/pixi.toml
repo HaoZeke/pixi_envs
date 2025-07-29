@@ -27,9 +27,19 @@ conda = ">=25.5.1,<26"
 conda-build = ">=25.5.0,<26"
 
 [environments]
-# There's basically one per file in atomistic-cookbook/examples
-lpr = {features = ["lpr"]}
+# Baseline, setup by nox in each session
+
+# For interactive usage
 jup = {features = ["jup"]}
+# There's basically one per file in atomistic-cookbook/examples
+lpr = {features = ["lpr", "bldbase"]}
+
+[feature.bldbase.dependencies]
+sphinx-gallery = ">=0.19.0,<0.20"
+sphinx = ">=8.2.3,<9"
+pillow = ">=11.3.0,<12"
+matplotlib = ">=3.10.3,<4"
+chemiscope = ">=0.8.6,<0.9"
 
 [feature.lpr.dependencies]
 python = "==3.11"
@@ -47,6 +57,19 @@ python -m ipykernel install \
   --prefix "$(pixi r -e jup sh -c 'echo $CONDA_PREFIX')" \
   --name "pixi-$PIXI_ENVIRONMENT_NAME" \
   --display-name "Python (pixi-$PIXI_ENVIRONMENT_NAME)"
+"""
+
+[feature.lpr.tasks.to-ipynb]
+# It is defined for each feature because sphinx-gallery insists on running the
+# code first before generating the ipynb files
+#
+# NOTE(rg): This is the only way to actually get good syntax highlighting
+cwd = "atomistic-cookbook"
+args = [ {"arg" = "example", "default" = "lpr"} ]
+cmd = """
+python src/generate-gallery.py \
+       examples/{{ example }} && \
+mv docs/src/examples/{{ example }}/*.ipynb examples/{{ example }}
 """
 
 [feature.lpr.pypi-dependencies]
@@ -74,7 +97,7 @@ jupytext examples/**/*.py \
 
 [feature.jup.tasks.serve]
 depends-on = [
-{ task = "to-ipynb" },
+{ task = "to-ipynb", environment = "lpr" },
 { task = "register-kernel", environment = "lpr" },
 ]
 cwd = "atomistic-cookbook"
