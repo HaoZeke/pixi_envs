@@ -7,8 +7,13 @@ version = "0.1.0"
 
 [tasks]
 gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
-nox_gen = { cmd = "nox -e {{ example }} -- --no-website", cwd = "atomistic-cookbook", args = ["example"] }
-nb_gen = { cmd = "mv docs/src/examples/{{ example }}/*.ipynb examples/{{ example }}", cwd = "atomistic-cookbook", depends-on = [{task = "nox_gen", args = ["{{ example }}"]}], args = ["example"] }
+[tasks.nb_gen]
+cwd = "atomistic-cookbook"
+cmd = """
+nox -e {{ example }} -- --no-website && \
+mv docs/src/examples/{{ example }}/*.ipynb examples/{{ example }}
+"""
+args = ["example"]
 
 [dependencies]
 nox = ">=2025.5.1,<2026"
