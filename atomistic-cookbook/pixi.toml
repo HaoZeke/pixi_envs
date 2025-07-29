@@ -22,6 +22,17 @@ jup = {features = ["jup"]}
 [feature.lpr.dependencies]
 python = "==3.11"
 pip = ">=25.1.1,<26"
+ipykernel = ">=6.29.5,<7"
+
+[feature.lpr.tasks.register-kernel]
+# This one basically registers into jupyter Defined for each feature because the
+# ipykernel needs to be the one in the folder's environment
+cmd = """
+python -m ipykernel install \
+  --prefix "$(pixi r -e jup sh -c 'echo $CONDA_PREFIX')" \
+  --name "pixi-$PIXI_ENVIRONMENT_NAME" \
+  --display-name "Python (pixi-$PIXI_ENVIRONMENT_NAME)"
+"""
 
 [feature.lpr.pypi-dependencies]
 ase = "==3.22.1"
@@ -40,11 +51,14 @@ cmd = """
 cp ../jupytext.toml . && \
 jupytext examples/**/*.py \
          --to ipynb --from py:sphinx \
-         --update --opt rst2md=true
+         --update
 """
 
 [feature.jup.tasks.serve]
-depends-on = [ { task = "to-ipynb" } ]
+depends-on = [
+{ task = "to-ipynb" },
+{ task = "register-kernel", environment = "lpr" },
+]
 cwd = "atomistic-cookbook"
 args = [ {"arg" = "port", "default" = "8889"} ]
 cmd = """
