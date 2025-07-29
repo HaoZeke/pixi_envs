@@ -151,6 +151,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/babel-2.17.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/beautifulsoup4-4.13.4-pyha770c72_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/black-25.1.0-pyh866005b_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/blackdoc-0.4.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/bleach-6.2.0-pyh29332c3_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/bleach-with-css-6.2.0-h82add2a_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/boltons-25.0.0-pyhd8ed1ab_0.conda
@@ -205,6 +207,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/ipython-9.4.0-pyhfa0c392_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/ipython_pygments_lexers-1.1.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/isoduration-20.11.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/isort-6.0.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/jedi-0.19.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/jinja2-3.1.6-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/json5-0.12.0-pyhd8ed1ab_0.conda
@@ -272,7 +275,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/menuinst-2.3.1-py313h78bf25f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mistune-3.1.3-pyh29332c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.7.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/msgpack-python-1.1.1-py313h33d0bda_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.10.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.16.6-pyh29332c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/nbformat-5.10.4-pyhd8ed1ab_1.conda
@@ -290,6 +295,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/patch-2.7.6-h7f98852_1002.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/patchelf-0.17.2-h58526e2_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pathspec-0.12.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.9.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-pyhd8ed1ab_1004.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pillow-11.3.0-py313h8db990d_0.conda
@@ -327,6 +333,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3339-validator-0.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3986-validator-0.1.1-pyh9f0ad1d_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3987-syntax-1.1.0-pyhe01879c_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/rich-14.1.0-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-14.1.1-h8fae777_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/roman-numerals-py-3.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.26.0-py313h4b2b08d_0.conda
@@ -867,6 +874,33 @@ packages:
   - pkg:pypi/beautifulsoup4?source=hash-mapping
   size: 146613
   timestamp: 1744783307123
+- conda: https://conda.anaconda.org/conda-forge/noarch/black-25.1.0-pyh866005b_0.conda
+  sha256: c68f110cd491dc839a69e340930862e54c00fb02cede5f1831fcf8a253bd68d2
+  md5: b9b0c42e7316aa6043bdfd49883955b8
+  depends:
+  - click >=8.0.0
+  - mypy_extensions >=0.4.3
+  - packaging >=22.0
+  - pathspec >=0.9
+  - platformdirs >=2
+  - python >=3.11
+  license: MIT
+  license_family: MIT
+  size: 172678
+  timestamp: 1742502887437
+- conda: https://conda.anaconda.org/conda-forge/noarch/blackdoc-0.4.1-pyhd8ed1ab_0.conda
+  sha256: aa594ae1a1ff0838d8b5167af8a70c8f5717e2d466d6d5543ed8219f6c237496
+  md5: d4d7c1b806d097bc9cd2d53f9e21fdb7
+  depends:
+  - black
+  - more-itertools
+  - python >=3.10
+  - rich
+  - tomli
+  license: MIT
+  license_family: MIT
+  size: 35014
+  timestamp: 1751027162110
 - conda: https://conda.anaconda.org/conda-forge/noarch/bleach-6.2.0-pyh29332c3_4.conda
   sha256: a05971bb80cca50ce9977aad3f7fc053e54ea7d5321523efc7b9a6e12901d3cd
   md5: f0b4c8e370446ef89797608d60a564b3
@@ -2025,6 +2059,15 @@ packages:
   license_family: MIT
   size: 19832
   timestamp: 1733493720346
+- conda: https://conda.anaconda.org/conda-forge/noarch/isort-6.0.1-pyhd8ed1ab_1.conda
+  sha256: e1d0e81e3c3da5d7854f9f57ffb89d8f4505bb64a2f05bb01d78eff24344a105
+  md5: c25d1a27b791dab1797832aafd6a3e9a
+  depends:
+  - python >=3.9,<4.0
+  license: MIT
+  license_family: MIT
+  size: 75118
+  timestamp: 1746190379093
 - conda: https://conda.anaconda.org/conda-forge/noarch/itsdangerous-2.2.0-pyhd8ed1ab_1.conda
   sha256: 1684b7b16eec08efef5302ce298c606b163c18272b69a62b666fbaa61516f170
   md5: 7ac5f795c15f288984e32add616cdc59
@@ -3423,6 +3466,15 @@ packages:
   license_family: BSD
   size: 72749
   timestamp: 1742402716323
+- conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.7.0-pyhd8ed1ab_0.conda
+  sha256: d0c2253dcb1da6c235797b57d29de688dabc2e48cc49645b1cff2b52b7907428
+  md5: 7c65a443d58beb0518c35b26c70e201d
+  depends:
+  - python >=3.9
+  license: MIT
+  license_family: MIT
+  size: 61359
+  timestamp: 1745349566387
 - conda: https://conda.anaconda.org/conda-forge/linux-64/msgpack-python-1.1.1-py311hd18a35c_0.conda
   sha256: f07aafd9e9adddf66b75630b4f68784e22ce63ae9e0887711a7386ceb2506fca
   md5: d0898973440adc2ad25917028669126d
@@ -3462,6 +3514,15 @@ packages:
   - pkg:pypi/munkres?source=hash-mapping
   size: 15851
   timestamp: 1749895533014
+- conda: https://conda.anaconda.org/conda-forge/noarch/mypy_extensions-1.1.0-pyha770c72_0.conda
+  sha256: 6ed158e4e5dd8f6a10ad9e525631e35cee8557718f83de7a4e3966b1f772c4b1
+  md5: e9c622e0d00fa24a6292279af3ab6d06
+  depends:
+  - python >=3.9
+  license: MIT
+  license_family: MIT
+  size: 11766
+  timestamp: 1745776666688
 - conda: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.10.2-pyhd8ed1ab_0.conda
   sha256: a20cff739d66c2f89f413e4ba4c6f6b59c50d5c30b5f0d840c13e8c9c2df9135
   md5: 6bb0d77277061742744176ab555b723c
@@ -3713,6 +3774,15 @@ packages:
   purls: []
   size: 94048
   timestamp: 1673473024463
+- conda: https://conda.anaconda.org/conda-forge/noarch/pathspec-0.12.1-pyhd8ed1ab_1.conda
+  sha256: 9f64009cdf5b8e529995f18e03665b03f5d07c0b17445b8badef45bde76249ee
+  md5: 617f15191456cc6a13db418a275435e5
+  depends:
+  - python >=3.9
+  license: MPL-2.0
+  license_family: MOZILLA
+  size: 41075
+  timestamp: 1733233471940
 - conda: https://conda.anaconda.org/conda-forge/linux-64/pcre2-10.45-hc749103_0.conda
   sha256: 27c4014f616326240dcce17b5f3baca3953b6bc5f245ceb49c3fa1e6320571eb
   md5: b90bece58b4c2bf25969b70f3be42d25
@@ -4445,6 +4515,18 @@ packages:
   license_family: MIT
   size: 22913
   timestamp: 1752876729969
+- conda: https://conda.anaconda.org/conda-forge/noarch/rich-14.1.0-pyhe01879c_0.conda
+  sha256: 3bda3cd6aa2ca8f266aeb8db1ec63683b4a7252d7832e8ec95788fb176d0e434
+  md5: c41e49bd1f1479bed6c6300038c5466e
+  depends:
+  - markdown-it-py >=2.2.0
+  - pygments >=2.13.0,<3.0.0
+  - python >=3.9
+  - typing_extensions >=4.0.0,<5.0.0
+  - python
+  license: MIT
+  size: 201098
+  timestamp: 1753436991345
 - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-14.1.1-h8fae777_1.conda
   sha256: b8c3e26a804077fde11fc3579207c7a60db32c5367c2330fe6d620f8e49a6dc4
   md5: 845d9730024ab628f55d384631ceb499
