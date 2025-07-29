@@ -7,6 +7,7 @@ version = "0.1.0"
 
 [tasks]
 gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
+
 [tasks.nb_gen]
 cwd = "atomistic-cookbook"
 cmd = """
@@ -58,6 +59,10 @@ skmatter = ">=0.3"
 jupyterlab = ">=4.4.5,<5"
 jupytext = ">=1.17.2,<2"
 sphinx-gallery = ">=0.19.0,<0.20"
+pypandoc = ">=1.15,<2"
+
+[feature.jup.tasks]
+py-sphinx = { cmd = "python src/ipynb-to-gallery.py examples/{{ example }}/*.ipynb", cwd = "atomistic-cookbook", args = ["example"] }
 
 [feature.jup.tasks.to-ipynb]
 cwd = "atomistic-cookbook"
