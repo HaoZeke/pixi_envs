@@ -1,0 +1,22 @@
+[workspace]
+authors = ["Rohit Goswami <rog32@hi.is>"]
+channels = ["conda-forge"]
+name = "asv"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+
+[feature.py37.dependencies]
+python = ">=3.7,<3.8"
+pip = ">=24.0,<25"
+
+[feature.py38.dependencies]
+python = ">=3.8,<3.9"
+pip = ">=24.3.1,<25"
+
+[environments]
+min-gha = {features = ["py38"]}
+min-ver = {features = ["py37"]}
