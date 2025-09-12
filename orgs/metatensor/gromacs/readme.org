@@ -1,0 +1,20 @@
+* About
+Helper for integrating ~metatomic~ into GROMACS.
+** Build details
+Basic build:
+#+begin_src bash
+cd gromacs
+mkdir build
+cd build
+cmake .. \
+    -DGMX_BUILD_OWN_FFTW=ON \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+    -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DCMAKE_C_COMPILER=$(which clang) \
+    -DGMX_MPI=yes \
+    -DCMAKE_BUILD_TYPE=Debug
+make -j$(nproc)
+cmake install --install-prefix $CONDA_PREFIX
+#+end_src
+*** TODO Use ~fftw3~
