@@ -17,6 +17,10 @@ pip = ">=24.0,<25"
 python = ">=3.8,<3.9"
 pip = ">=24.3.1,<25"
 
+[feature.py313.dependencies]
+python = ">=3.13,<3.14"
+
 [environments]
 min-gha = {features = ["py38"]}
 min-ver = {features = ["py37"]}
+latest = {features = ["py313"]}
