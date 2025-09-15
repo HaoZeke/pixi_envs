@@ -28,4 +28,22 @@ cmake .. \
 make -j$(nproc)
 cmake install --install-prefix $CONDA_PREFIX
 #+end_src
+Easier with the ~pixi~ environment:
+#+begin_src bash
+pixi s
+cd gromacs
+mkdir build; cd $_
+cmake .. \
+    -DGMX_BUILD_OWN_FFTW=OFF \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+    -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+    -DCMAKE_CXX_COMPILER=$(which clang++) \
+    -DCMAKE_C_COMPILER=$(which clang) \
+    -DGMX_MPI=yes \
+    -DGMX_METATOMIC=yes \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS="-D_LIBCPP_DISABLE_AVAILABILITY"
+
+make -j$(nproc)
+#+end_src
 *** TODO Use ~fftw3~
