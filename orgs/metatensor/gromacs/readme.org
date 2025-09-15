@@ -1,5 +1,16 @@
 * About
 Helper for integrating ~metatomic~ into GROMACS.
+
+The primary development repository functions as a GitLab fork. Contributors should clone and work with this fork for all major development:
+#+begin_src bash
+git clone https://gitlab.com/HaoZeke/gromacs.git
+#+end_src
+- This fork connects with the upstream GitLab GROMACS for an eventual "MR," or merge request.
+- The project also maintains a GitHub mirror on the =metatensor= organization.
+  + Developers may submit pull requests, or "PRs" to this mirror.
+
+Regardless of where a contribution begins, a single merge request for
+=metatomic= proceeds through the GitLab fork to the GROMACS upstream repository.
 ** Build details
 Basic build:
 #+begin_src bash
