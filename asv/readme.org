@@ -1,0 +1,17 @@
+* About
+A set of ~pixi~ environments to handle development of the ~asv~ ecosystem.
+** Usage
+Clone the repository into this directory:
+#+begin_src bash
+# Most likely you'd want a fork though
+git clone git@github.com:airspeed-velocity/asv.git
+#+end_src
+A good use-case for this is handling the version ranges required by ~asv~ in a
+better way. For instance, the minimum GHA version is ~3.8~, so:
+#+begin_src bash
+pixi s -e min-gha
+#+end_src
+Or the lowest version altogether:
+#+begin_src bash
+pixi s -e min-ver
+#+end_src
