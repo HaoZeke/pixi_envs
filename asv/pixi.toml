@@ -8,6 +8,7 @@ version = "0.1.0"
 [tasks]
 
 [dependencies]
+pip = ">=24.0,<26"
 
 [feature.py37.dependencies]
 python = ">=3.7,<3.8"
@@ -16,6 +17,9 @@ pip = ">=24.0,<25"
 [feature.py38.dependencies]
 python = ">=3.8,<3.9"
 pip = ">=24.3.1,<25"
+conda = ">=24.7.1,<25"
+conda-build = ">=24.7.1,<25"
+py_rattler = ">=0.6.3,<0.7"
 
 [feature.py313.dependencies]
 python = ">=3.13,<3.14"
