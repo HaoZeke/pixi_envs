@@ -8,14 +8,14 @@ version = "0.1.0"
 [tasks]
 
 [dependencies]
-clang = ">=21.1.1,<22"
-openmpi = ">=5.0.8,<6"
 cmake = ">=4.1.1,<5"
 fftw = ">=3.3.10,<4"
-openmp = ">=8.0.1,<9"
 openblas = ">=0.3.30,<0.4"
 sccache = ">=0.10.0,<0.11"
-clangxx = ">=21.1.1,<22"
+openmpi = ">=5.0.8,<6"
+openmp = ">=7.0.0,<8"
+compilers = ">=1.11.0,<2"
+clangdev = ">=21.1.1,<22"
 
 [environments]
 metatomic = {features = ["metatomic", "pybase"]}
