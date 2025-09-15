@@ -48,6 +48,8 @@ cmake .. \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_CXX_FLAGS="-D_LIBCPP_DISABLE_AVAILABILITY -I$CONDA_PREFIX/targets/x86_64-linux/include/ -I../src"
 
-make -j$(nproc)
+cmake --build . --parallel $(nproc)
+cmake install . --install-prefix $CONDA_PREFIX
+cmake --build . --target install
 #+end_src
 *** TODO Use ~fftw3~
