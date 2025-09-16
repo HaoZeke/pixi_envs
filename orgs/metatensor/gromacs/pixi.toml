@@ -29,6 +29,9 @@ metatomic-torch = ">=0.1.4, <0.2"
 
 [feature.metatomic.dependencies]
 mkl = ">=2025.2.0,<2026"
+cuda-compiler = ">=13.0.1,<14"
+cuda-libraries-dev = ">=13.0.1,<14"
+cuda-version = ">=13.0,<14"
 
 [feature.pybase.dependencies]
 python = ">=3.12,<3.13"
