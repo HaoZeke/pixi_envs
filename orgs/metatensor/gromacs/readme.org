@@ -30,7 +30,7 @@ cmake install --install-prefix $CONDA_PREFIX
 #+end_src
 Easier with the ~pixi~ environment:
 #+begin_src bash
-pixi s
+pixi s -e metatomic
 # Optional but recommended for logging
 # cargo binstall bless
 cd gromacs
@@ -59,24 +59,4 @@ bless -- cmake .. \
 cmake --build . --parallel $(nproc)
 cmake install . --install-prefix $CONDA_PREFIX
 cmake --build . --target install
-#+end_src
-
-#+begin_src bash
-TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)")
-MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)")
-MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)")
-MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)")
-CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX"
-cmake .. \
-    -DGMX_BUILD_OWN_FFTW=OFF \
-    -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
-    -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-    -DCMAKE_CXX_COMPILER=$(which clang++) \
-    -DCMAKE_C_COMPILER=$(which clang) \
-    -DGMX_MPI=yes \
-    -DGMX_METATOMIC=yes \
-    -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_CXX_FLAGS="-D_LIBCPP_DISABLE_AVAILABILITY -I$CONDA_PREFIX/targets/x86_64-linux/include/ -I../src"
-
 #+end_src
