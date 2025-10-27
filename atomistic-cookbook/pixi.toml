@@ -26,6 +26,7 @@ requests = ">=2.32.4,<3"
 
 [activation.env]
 UV_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu"
+PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu"
 UV_INDEX_STRATEGY = "unsafe-best-match"
 
 [environments]
@@ -39,13 +40,14 @@ eon-pet-neb = {features = ["eon-pet-neb", "bldbase"]}
 ase = ">=3.25.0,<4"
 ipykernel = ">=6.30.0,<7"
 eon = ">=2.8.0,<3"
-nwchem = ">=7.2.3,<8"
+xtb-python = ">=22.1,<23"
 
 [feature.eon-pet-neb.pypi-dependencies]
 metatomic-torch = ">=0.1.5, <0.2"
 metatomic = ">=0.1.0, <0.2"
 metatrain = ">=2025.11, <2026"
-# chemiscope = { version = "*", extras = ["explore"] }
+torch = ">=2.7, <2.8"
+chemiscope = { version = "*", extras = ["explore"] }
 
 [feature.eon-pet-neb.tasks.register-kernel]
 # This one basically registers into jupyter.
