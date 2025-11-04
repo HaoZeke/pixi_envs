@@ -1,6 +1,6 @@
 [workspace]
 authors = ["Rohit Goswami <rgoswami[at]ieee.org>"]
-channels = ["conda-forge", "metatensor"]
+channels = ["conda-forge", "metatensor", "https://repo.prefix.dev/rg-forge"]
 name = "atomistic-cookbook"
 platforms = ["linux-64"]
 version = "0.1.0"
@@ -22,6 +22,7 @@ pyyaml = ">=6.0.2,<7"
 docutils = ">=0.21.2,<0.22"
 # TODO(rg): Add this upstream, not in requirements.txt
 requests = ">=2.32.4,<3"
+ira = ">=2.2.0,<3"
 # These are basically to build the entire nox set
 
 [activation.env]
@@ -41,13 +42,15 @@ ase = ">=3.25.0,<4"
 ipykernel = ">=6.30.0,<7"
 eon = ">=2.8.0,<3"
 xtb-python = ">=22.1,<23"
+ira = ">=2.2.0,<3"
 
 [feature.eon-pet-neb.pypi-dependencies]
 metatomic-torch = ">=0.1.5, <0.2"
 metatomic = ">=0.1.0, <0.2"
 metatrain = ">=2025.11, <2026"
 torch = ">=2.7, <2.8"
-chemiscope = { version = "*", extras = ["explore"] }
+chemiscope = "*"
+rgpycrumbs = ">=0.0.3, <0.0.4"
 
 [feature.eon-pet-neb.tasks.register-kernel]
 # This one basically registers into jupyter.
@@ -124,6 +127,7 @@ sphinx-gallery = ">=0.19.0,<0.20"
 pypandoc = ">=1.15,<2"
 isort = ">=6.0.1,<7"
 blackdoc = ">=0.4.1,<0.5"
+ira = ">=2.2.0,<3"
 
 [feature.jup.tasks.nbfmt]
 cwd = "atomistic-cookbook"
@@ -156,3 +160,6 @@ jupyter lab --ServerApp.allow_remote_access=1 \
   --ContentsManager.allow_hidden=True \
   --port={{ port }}
 """
+
+[feature.jup.pypi-dependencies]
+metatrain = ">=2025.11, <2026"
