@@ -1,0 +1,86 @@
+[workspace]
+authors = ["Rohit Goswami <rohit.goswami@epfl.ch>"]
+# "nvidia", "metatensor"
+channels = ["conda-forge"]
+name = "gromacs"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+[tasks.syncer]
+cwd = "."
+args = ["direction", {arg = "hostname", default = "rg.cosmolab"}, ]
+cmd = """
+bash scripts/sync.sh {{ direction }} {{ hostname }}
+"""
+
+[feature.metatomic.tasks.gromk]
+cwd = "gromacs/build"
+args = ["buildtype"]
+depends-on = [
+  { task = "setupgro", environment = "metatomic", "args" = ["{{buildtype}}"] },
+]
+cmd = """
+cmake --build . --parallel $(nproc) && \
+cmake install . --install-prefix $CONDA_PREFIX && \
+cmake --build . --target install
+"""
+
+[feature.metatomic.tasks.grotst]
+cwd = "gromacs/build"
+args = ["buildtype"]
+depends-on = [
+  { task = "gromk", environment = "metatomic", "args" = ["{{buildtype}}"] },
+]
+cmd = "make check -j$(nproc)"
+
+[feature.metatomic.tasks.setupgro]
+cwd = "gromacs"
+args = [{arg = "buildtype", default = "Debug"}]
+# Uses system compilers, needs nvcc
+cmd = """
+mkdir -p build && \
+cd build && \
+TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
+MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
+MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
+MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
+CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
+cmake .. \
+-D GMX_BUILD_OWN_FFTW=OFF \
+-D GPU_DEVICE=CUDA \
+-D GMX_MPI=OFF \
+-D GMX_METATOMIC=ON \
+-D DOWNLOAD_VESIN=ON \
+-D BUILD_TESTING=ON \
+-D CMAKE_BUILD_TYPE={{ buildtype }} \
+-D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
+-D CMAKE_C_COMPILER_LAUNCHER=sccache \
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
+"""
+
+[dependencies]
+cmake = ">=4.1.1,<5"
+fftw = ">=3.3.10,<4"
+openblas = ">=0.3.30,<0.4"
+sccache = ">=0.10.0,<0.11"
+openmpi = ">=5.0.8,<6"
+
+[environments]
+metatomic = {features = ["metatomic", "pybase"]}
+
+[feature.metatomic.pypi-dependencies]
+vesin = ">=0.4.1, <0.5"
+torch = ">=2.7.0, <2.8"
+metatomic-torch = ">=0.1.4, <0.2"
+
+# [feature.metatomic.dependencies]
+# We can just use system stuff
+# mkl = ">=2025.2.0,<2026"
+# cuda-compiler = ">=13.0.1,<14"
+# cuda-libraries-dev = ">=13.0.1,<14"
+# cuda-version = ">=13.0,<14"
+
+[feature.pybase.dependencies]
+python = ">=3.12,<3.13"
+pip = ">=25.2,<26"
