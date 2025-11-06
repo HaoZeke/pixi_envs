@@ -1,6 +1,7 @@
 [workspace]
 authors = ["Rohit Goswami <rohit.goswami@epfl.ch>"]
-channels = ["conda-forge", "nvidia", "metatensor"]
+# "nvidia", "metatensor"
+channels = ["conda-forge"]
 name = "gromacs"
 platforms = ["linux-64"]
 version = "0.1.0"
@@ -13,11 +14,6 @@ fftw = ">=3.3.10,<4"
 openblas = ">=0.3.30,<0.4"
 sccache = ">=0.10.0,<0.11"
 openmpi = ">=5.0.8,<6"
-compilers = ">=1.11.0,<2"
-clangdev = ">=20,<21"
-cuda-compiler = ">=13.0.1,<14"
-cuda-cudart = ">=13.0.88,<14"
-mkl = ">=2025.2.0,<2026"
 
 [environments]
 metatomic = {features = ["metatomic", "pybase"]}
@@ -27,11 +23,12 @@ vesin = ">=0.3.7, <0.4"
 torch = ">=2.7.0, <2.8"
 metatomic-torch = ">=0.1.4, <0.2"
 
-[feature.metatomic.dependencies]
-mkl = ">=2025.2.0,<2026"
-cuda-compiler = ">=13.0.1,<14"
-cuda-libraries-dev = ">=13.0.1,<14"
-cuda-version = ">=13.0,<14"
+# [feature.metatomic.dependencies]
+# We can just use system stuff
+# mkl = ">=2025.2.0,<2026"
+# cuda-compiler = ">=13.0.1,<14"
+# cuda-libraries-dev = ">=13.0.1,<14"
+# cuda-version = ">=13.0,<14"
 
 [feature.pybase.dependencies]
 python = ">=3.12,<3.13"
