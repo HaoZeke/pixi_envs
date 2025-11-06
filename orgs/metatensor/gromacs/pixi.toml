@@ -15,7 +15,7 @@ bash scripts/sync.sh {{ direction }} {{ hostname }}
 """
 
 [feature.metatomic.tasks.gromk]
-cwd = "gromacs"
+cwd = "gromacs/build"
 args = ["buildtype"]
 depends-on = [
   { task = "setupgro", environment = "metatomic", "args" = ["{{buildtype}}"] },
@@ -27,7 +27,7 @@ cmake --build . --target install
 """
 
 [feature.metatomic.tasks.grotst]
-cwd = "gromacs"
+cwd = "gromacs/build"
 args = ["buildtype"]
 depends-on = [
   { task = "gromk", environment = "metatomic", "args" = ["{{buildtype}}"] },
