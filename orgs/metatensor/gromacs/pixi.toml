@@ -22,7 +22,7 @@ depends-on = [
 ]
 cmd = """
 cmake --build . --parallel $(nproc) && \
-cmake install . --install-prefix ${CONDA_PREFIX} && \
+cmake install . --install-prefix $CONDA_PREFIX && \
 cmake --build . --target install
 """
 
@@ -56,7 +56,7 @@ cmake .. \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
 -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
 -D CMAKE_C_COMPILER_LAUNCHER=sccache \
--D CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}"
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
 """
 
 [dependencies]
