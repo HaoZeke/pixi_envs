@@ -26,7 +26,7 @@ openmpi = ">=5.0.8,<6"
 metatomic = {features = ["metatomic", "pybase"]}
 
 [feature.metatomic.pypi-dependencies]
-vesin = ">=0.3.7, <0.4"
+vesin = ">=0.4.1, <0.5"
 torch = ">=2.7.0, <2.8"
 metatomic-torch = ">=0.1.4, <0.2"
 
