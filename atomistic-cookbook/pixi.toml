@@ -8,6 +8,13 @@ version = "0.1.0"
 [tasks]
 gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
 
+[tasks.syncer]
+cwd = "."
+args = ["direction", {arg = "hostname", default = "rg.cosmolab"}, ]
+cmd = """
+bash scripts/sync.sh {{ direction }} {{ hostname }}
+"""
+
 [tasks.nb_gen]
 cwd = "atomistic-cookbook"
 cmd = """
