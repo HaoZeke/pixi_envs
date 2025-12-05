@@ -21,11 +21,11 @@ HOST=${2:-$DEFAULT_HOST}
 REMOTE_TARGET="${HOST}:${REMOTE_BASE_PATH}/${LOCAL_DIR}"
 
 # Define explicit excludes
+# For the cookbook, .git/ is required, and best to exclude .nox/
 EXCLUDE_LIST=(
     --exclude=".pixi/*"
     --exclude=".nox/*"
     --exclude="pixi.lock"
-    --exclude=".git/*"
     --exclude=".gitignore"
     --exclude=".snakemake/*"
     --exclude="snake_runs/*"
