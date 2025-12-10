@@ -1,6 +1,6 @@
 sync:
   defaults:
-    mode: "two-way-safe" # Bidirectional, but won't delete files if they vanish on one side during a race condition
+    mode: "two-way-resolved" # Bidirectional, but alpha wins all conflicts if they vanish on one side during a race condition
     ignore:
       vcs: false
       paths:
