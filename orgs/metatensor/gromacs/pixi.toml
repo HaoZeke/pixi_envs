@@ -41,11 +41,11 @@ args = [{arg = "buildtype", default = "Debug"}]
 cmd = """
 mkdir -p build && \
 cd build && \
-TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
-MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
-MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
-MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
-CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
+export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
+export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
+export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
+export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
+export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
 cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GPU_DEVICE=CUDA \

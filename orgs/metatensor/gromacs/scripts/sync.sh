@@ -24,7 +24,6 @@ REMOTE_TARGET="${HOST}:${REMOTE_BASE_PATH}/${LOCAL_DIR}"
 EXCLUDE_LIST=(
     --exclude=".pixi/*"
     --exclude="pixi.lock"
-    --exclude=".git/*"
     --exclude=".gitignore"
     --exclude=".snakemake/*"
     --exclude="snake_runs/*"
