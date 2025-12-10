@@ -1,12 +1,19 @@
 [workspace]
 authors = ["Rohit Goswami <rgoswami[at]ieee.org>"]
-channels = ["https://repo.prefix.dev/rg-forge", "conda-forge", "metatensor"]
+channels = ["conda-forge", "metatensor", "https://repo.prefix.dev/rg-forge"]
 name = "atomistic-cookbook"
 platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
 gclean = { cmd = "git clean -dfx", cwd = "atomistic-cookbook"}
+
+[tasks.syncer]
+cwd = "."
+args = ["direction", {arg = "hostname", default = "rg.cosmolab"}, ]
+cmd = """
+bash scripts/sync.sh {{ direction }} {{ hostname }}
+"""
 
 [tasks.nb_gen]
 cwd = "atomistic-cookbook"
@@ -22,9 +29,13 @@ pyyaml = ">=6.0.2,<7"
 docutils = ">=0.21.2,<0.22"
 # TODO(rg): Add this upstream, not in requirements.txt
 requests = ">=2.32.4,<3"
+ira = ">=2.2.0,<3"
 # These are basically to build the entire nox set
-#conda = ">=25.5.1,<26" # XXX(rg): This has a conflict due to fmt with eon!!
-conda-build = ">=25.5.0,<26"
+
+[activation.env]
+UV_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu"
+PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu"
+UV_INDEX_STRATEGY = "unsafe-best-match"
 
 [environments]
 # For interactive usage
@@ -34,15 +45,19 @@ lpr = {features = ["lpr", "bldbase"]}
 eon-pet-neb = {features = ["eon-pet-neb", "bldbase"]}
 
 [feature.eon-pet-neb.dependencies]
-eon = ">=3.0.dev3,<4"
 ase = ">=3.25.0,<4"
 ipykernel = ">=6.30.0,<7"
+eon = ">=2.8.0,<3"
+xtb-python = ">=22.1,<23"
+ira = ">=2.2.0,<3"
 
 [feature.eon-pet-neb.pypi-dependencies]
-metatomic-torch = ">=0.1.3, <0.2"
+metatomic-torch = ">=0.1.5, <0.2"
 metatomic = ">=0.1.0, <0.2"
-metatrain = ">=2025.8.1, <2026"
-chemiscope = { version = "*", extras = ["explore"] }
+metatrain = ">=2025.11, <2026"
+torch = ">=2.7, <2.8"
+chemiscope = "*"
+rgpycrumbs = ">=0.0.3, <0.0.4"
 
 [feature.eon-pet-neb.tasks.register-kernel]
 # This one basically registers into jupyter.
@@ -119,6 +134,7 @@ sphinx-gallery = ">=0.19.0,<0.20"
 pypandoc = ">=1.15,<2"
 isort = ">=6.0.1,<7"
 blackdoc = ">=0.4.1,<0.5"
+ira = ">=2.2.0,<3"
 
 [feature.jup.tasks.nbfmt]
 cwd = "atomistic-cookbook"
@@ -151,3 +167,6 @@ jupyter lab --ServerApp.allow_remote_access=1 \
   --ContentsManager.allow_hidden=True \
   --port={{ port }}
 """
+
+[feature.jup.pypi-dependencies]
+metatrain = ">=2025.11, <2026"
