@@ -1,0 +1,29 @@
+sync:
+  defaults:
+    mode: "two-way-safe" # Bidirectional, but won't delete files if they vanish on one side during a race condition
+    ignore:
+      vcs: true # Automatically ignores .git, .gitignore contents
+      paths:
+        - ".pixi/"
+        - "pixi.lock"
+        - ".ds_store"
+        - ".snakemake/"
+        - "snake_runs/"
+        - ".dvc/"
+        - "build/"
+        - "*.lock"
+
+  # TODO(rg): fill out the rest of these
+  # TODO(rg): still needs more customization for the target...
+  # Session 1: Gromacs
+  gromacs:
+    alpha: "./orgs/metatensor/gromacs"
+    beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/gromacs"
+
+  # Session 2: Cookbook
+  cookbook:
+    alpha: "./atomistic-cookbook"
+    beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/atomistic-cookbook"
+    ignore:
+      paths:
+        - ".nox/"
