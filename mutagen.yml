@@ -2,14 +2,17 @@ sync:
   defaults:
     mode: "two-way-safe" # Bidirectional, but won't delete files if they vanish on one side during a race condition
     ignore:
-      vcs: true # Automatically ignores .git, .gitignore contents
+      vcs: false
       paths:
         - ".pixi/"
         - "pixi.lock"
         - ".ds_store"
+        - ".ruff_cache"
         - ".snakemake/"
         - "snake_runs/"
         - ".dvc/"
+        - ".tox/"
+        - ".nox/"
         - "build/"
         - "*.lock"
 
