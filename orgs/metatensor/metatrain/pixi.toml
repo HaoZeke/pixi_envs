@@ -1,0 +1,11 @@
+[workspace]
+authors = ["Rohit Goswami <rog32@hi.is>"]
+channels = ["conda-forge"]
+name = "metatrain"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+nodejs = ">=24.9.0,<24.10"
