@@ -4,6 +4,29 @@ Development environments with ~pixi~.
 - Get ~pixi~
 - Setup the upstream repository below the corresponding ~pixi.toml~.
 - Profit.
+** Synchronization
+For some reason, instead of using a bunch of hand-rolled ~rsync~ commands to
+push and pull from remote machines in an ad-hoc set of ~pixi~ tasks, we use
+[[https://mutagen.io/documentation/introduction/configuration/][mutagen]]. Basically this provides real-time, bi-directional syncing and handles
+SSH connections automatically.
+*** Usage
+Instead of running a script manually, we manage the daemon:
+#+BEGIN_SRC sh
+# Start the background daemon (idempotent)
+mutagen project start
+
+# Monitor status (Check for conflicts or sync speed)
+mutagen sync monitor
+
+# View possible conflicts
+mutagen project list
+
+# Force a sync (e.g., after a remote run before closing laptop)
+mutagen project flush
+
+# Stop the daemon
+mutagen project terminate
+#+END_SRC
 ** Similar projects
 Conceptually this follows a series of out-of-build experiments:
 - [[https://github.com/HaoZeke/openblas_buildsys_snips][OpenBLAS build snippets]] :: Which was used to work on ~meson~ [[https://github.com/mesonbuild/wrapdb/pull/1734][bindings to OpenBLAS]]
