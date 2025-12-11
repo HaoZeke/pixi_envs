@@ -36,3 +36,4 @@ sync:
       paths:
         - "dist/"
         - "target/"
+        - "rust-bindgen/"
