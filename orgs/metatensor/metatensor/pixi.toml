@@ -11,14 +11,21 @@ sccache = ">=0.10.0,<0.11"
 [dependencies]
 
 [feature.cuda.dependencies]
-mkl = ">=2025.2.0,<2026"
 cuda-compiler = ">=13.0.1,<14"
 cuda-libraries-dev = ">=13.0.1,<14"
 cuda-version = ">=13.0,<14"
 
 [environments]
-cuda = {features = ["cuda", "pybase"]}
+cuda = {features = ["pybase", "cuda"]}
+nocuda = {features = ["pybase", "nocuda"]}
+
+[feature.nocuda.activation]
+env = { CUDA_VISIBLE_DEVICES = "" }
+
+[feature.nocuda.pypi-options]
+extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
 
 [feature.pybase.dependencies]
 python = ">=3.12,<3.13"
 pip = ">=25.2,<26"
+pycparser = ">=2.22,<3"
