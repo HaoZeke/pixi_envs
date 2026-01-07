@@ -24,6 +24,9 @@ mutagen project list
 # Force a sync (e.g., after a remote run before closing laptop)
 mutagen project flush
 
+# Check conflicts
+mutagen sync list -l
+
 # Stop the daemon
 mutagen project terminate
 #+END_SRC
