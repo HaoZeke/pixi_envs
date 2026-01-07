@@ -1,29 +1,39 @@
 sync:
   defaults:
-    mode: "two-way-safe" # Bidirectional, but won't delete files if they vanish on one side during a race condition
+    mode: "two-way-resolved" # Bidirectional, but alpha wins all conflicts if they vanish on one side during a race condition
     ignore:
-      vcs: true # Automatically ignores .git, .gitignore contents
+      vcs: false
       paths:
         - ".pixi/"
         - "pixi.lock"
         - ".ds_store"
+        - ".ruff_cache"
         - ".snakemake/"
         - "snake_runs/"
         - ".dvc/"
+        - ".tox/"
+        - ".nox/"
         - "build/"
         - "*.lock"
 
   # TODO(rg): fill out the rest of these
   # TODO(rg): still needs more customization for the target...
-  # Session 1: Gromacs
   gromacs:
     alpha: "./orgs/metatensor/gromacs"
     beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/gromacs"
 
-  # Session 2: Cookbook
   cookbook:
     alpha: "./atomistic-cookbook"
     beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/atomistic-cookbook"
     ignore:
       paths:
         - ".nox/"
+
+  metatensor:
+    alpha: "./orgs/metatensor/metatensor"
+    beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/metatensor"
+    ignore:
+      paths:
+        - "dist/"
+        - "target/"
+        - "rust-bindgen/"

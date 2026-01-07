@@ -1,0 +1,10 @@
+* About
+Another out of tree project. Not strictly speaking necessary, since ~rustup~ has
+pretty good native support everywhere but, why not.
+
+#+begin_src bash
+git clone git@github.com:HaoZeke/metatensor
+pixi s
+# pixi s -e cuda
+# ^------ for a system with a GPU
+#+end_src
