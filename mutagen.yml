@@ -18,12 +18,21 @@ sync:
   # Session 1: Gromacs
   gromacs:
     alpha: "./orgs/metatensor/gromacs"
-    beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/gromacs"
+    beta: "rg.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/gromacs"
 
   # Session 2: Cookbook
   cookbook:
     alpha: "./atomistic-cookbook"
-    beta: "luthaf.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/atomistic-cookbook"
+    beta: "rg.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/atomistic-cookbook"
     ignore:
       paths:
         - ".nox/"
+
+  metatensor:
+    alpha: "./orgs/metatensor/metatensor"
+    beta: "rg.cosmolab:/home/goswami/Git/Github/epfl/lab-cosmo/pixi_envs/orgs/metatensor/metatensor"
+    ignore:
+      paths:
+        - "dist/"
+        - "target/"
+        - "rust-bindgen/"

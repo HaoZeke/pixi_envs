@@ -53,11 +53,11 @@ pixi s -e metatomic
 # cargo binstall bless
 cd gromacs
 mkdir build; cd $_
-TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)")
-MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)")
-MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)")
-MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)")
-CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX"
+export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)")
+export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)")
+export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)")
+export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)")
+export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX"
 # drop bless -- if not installed
 bless -- cmake .. \
     -DGMX_BUILD_OWN_FFTW=OFF \
@@ -81,8 +81,24 @@ cmake --build . --target install
 
 #+begin_src bash
 # local compilers
-bless -- cmake ..     -DGMX_BUILD_OWN_FFTW=OFF     -DCMAKE_CXX_COMPILER_LAUNCHER=sccache     -DCMAKE_C_COMPILER_LAUNCHER=sccache     -DGMX_MPI=OFF -DGMX_METATOMIC=yes     -DBUILD_TESTING=OFF     -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"     -DCMAKE_BUILD_TYPE=Debug     -DDOWNLOAD_VESIN=yes     -DGPU_DEVICE=CUDA  -DBUILD_TESTING=ON
+bless -- cmake ..     -DGMX_BUILD_OWN_FFTW=OFF     -DCMAKE_CXX_COMPILER_LAUNCHER=sccache     -DCMAKE_C_COMPILER_LAUNCHER=sccache     -DGMX_MPI=OFF -DGMX_METATOMIC=yes      -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"     -DCMAKE_BUILD_TYPE=Debug     -DDOWNLOAD_VESIN=yes     -DGPU_DEVICE=CUDA  -DBUILD_TESTING=ON
 make check # builds and runs tests
 gmx_mpi grompp -maxwarn 10
 gmx_mpi mdrun
 #+end_src
+
+mkdir -p build && \
+cd build && \
+export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
+export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
+export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
+export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
+export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX;$CMAKE_PREFIX_PATH" && \
+cmake .. \
+ -DGMX_BUILD_OWN_FFTW=ON \
+ -DGMX_GPU=CUDA \
+ -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
+ -DTorch_DIR=$TORCH_PREFIX/Torch \
+ -DGMX_METATOMIC=ON \
+ -DDOWNLOAD_VESIN=ON \
+ -DCUDAToolkit_ROOT=$CONDA_PREFIX
