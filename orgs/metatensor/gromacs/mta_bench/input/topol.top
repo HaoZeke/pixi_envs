@@ -1,0 +1,26 @@
+[ defaults ]
+; nbfunc  comb-rule gen-pairs fudgeLJ fudgeQQ
+  1       2         no        1.0     1.0
+
+[ atomtypes ]
+; name      at.num  mass     charge ptype  sigma      epsilon
+  H           1       1.0080  0.0000   A   0            0
+  C           6      12.0110  0.0000   A   0            0
+ OW           8      15.9994  0.0000   A   0            0
+
+[ moleculetype ]
+; molname       nrexcl
+SOL             2
+
+[ atoms ]
+;   nr   type  resnr residue  atom   cgnr     charge       mass
+     1     OW      1    SOL     OW      1    -0.8476   15.99940
+     2      H      1    SOL    HW1      1     0.4238    1.00800
+     3      H      1    SOL    HW2      1     0.4238    1.00800
+
+[ system ]
+; Name
+water test system
+
+[ molecules ]
+; Compound        #mols
