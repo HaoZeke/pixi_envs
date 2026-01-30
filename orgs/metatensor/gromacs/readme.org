@@ -18,8 +18,10 @@ Standard builds:
 pixi r gromk Release
 cd mta_test
 python create_model.py
-gmx_mpi grompp
-gmx_mpi mdrun
+# pairlist has no gmx_mpi support
+# anyway threadmpi works beter in GROMACS land
+gmx grompp
+gmx mdrun
 #+end_src
 Profit.
 ** Development details
