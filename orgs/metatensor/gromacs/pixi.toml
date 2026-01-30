@@ -38,6 +38,8 @@ cmd = "make check -j$(nproc)"
 cwd = "gromacs"
 args = [{arg = "buildtype", default = "Debug"}]
 # Uses system compilers, needs nvcc
+# remember, pairlist notifications don't work with GMX_MPI but that's fine
+# because thread MPI works better anyway
 cmd = """
 mkdir -p build && \
 cd build && \
