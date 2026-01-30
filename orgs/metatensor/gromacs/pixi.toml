@@ -18,7 +18,7 @@ bash scripts/sync.sh {{ direction }} {{ hostname }}
 cwd = "gromacs/build"
 args = ["buildtype"]
 depends-on = [
-  { task = "setupgro", environment = "metatomic", "args" = ["{{buildtype}}"] },
+  { task = "setupgro", environment = "metatomic-cuda", "args" = ["{{buildtype}}"] },
 ]
 cmd = """
 cmake --build . --parallel $(nproc) && \
@@ -30,7 +30,7 @@ cmake --build . --target install
 cwd = "gromacs/build"
 args = ["buildtype"]
 depends-on = [
-  { task = "gromk", environment = "metatomic", "args" = ["{{buildtype}}"] },
+  { task = "gromk", environment = "metatomic-cuda", "args" = ["{{buildtype}}"] },
 ]
 cmd = "make check -j$(nproc)"
 
@@ -50,7 +50,7 @@ cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GPU_DEVICE=CUDA \
 -D GMX_MPI=OFF \
--D GMX_METATOMIC=ON \
+-D GMX_METATOMIC=AUTO \
 -D DOWNLOAD_VESIN=ON \
 -D BUILD_TESTING=ON \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
@@ -65,21 +65,25 @@ fftw = ">=3.3.10,<4"
 openblas = ">=0.3.30,<0.4"
 sccache = ">=0.10.0,<0.11"
 openmpi = ">=5.0.8,<6"
+pkg-config = ">=0.29.2,<0.30"
+pkgconf = ">=2.5.1,<3"
 
 [environments]
-metatomic = {features = ["metatomic", "pybase"]}
+metatomic-cuda = {features = ["metatomic", "pybase", "cuda"]}
 
 [feature.metatomic.pypi-dependencies]
 vesin = ">=0.4.1, <0.5"
 torch = ">=2.7.0, <2.8"
 metatomic-torch = ">=0.1.4, <0.2"
+metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
 
-# [feature.metatomic.dependencies]
-# We can just use system stuff
-# mkl = ">=2025.2.0,<2026"
-# cuda-compiler = ">=13.0.1,<14"
-# cuda-libraries-dev = ">=13.0.1,<14"
-# cuda-version = ">=13.0,<14"
+[feature.cuda.dependencies]
+cuda-compiler = ">=13.0.1,<14"
+cuda-libraries-dev = ">=13.0.1,<14"
+cuda-version = ">=13.0,<14"
+
+[feature.metatomic.dependencies]
+mkl = ">=2025.2.0,<2026"
 
 [feature.pybase.dependencies]
 python = ">=3.12,<3.13"

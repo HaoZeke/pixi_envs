@@ -17,6 +17,7 @@ Standard builds:
 # or Debug
 pixi r gromk Release
 cd mta_test
+python create_model.py
 gmx_mpi grompp
 gmx_mpi mdrun
 #+end_src
