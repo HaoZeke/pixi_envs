@@ -53,6 +53,7 @@ cmake .. \
 -D GPU_DEVICE=CUDA \
 -D GMX_MPI=OFF \
 -D GMX_METATOMIC=AUTO \
+-D DOWNLOAD_VESIN=ON \
 -D BUILD_TESTING=ON \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
 -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
@@ -73,6 +74,7 @@ pkgconf = ">=2.5.1,<3"
 metatomic-cuda = {features = ["metatomic", "pybase", "cuda"]}
 
 [feature.metatomic.pypi-dependencies]
+vesin = ">=0.4.2, <0.5"
 torch = ">=2.7.0, <2.8"
 metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
