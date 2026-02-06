@@ -1,0 +1,3 @@
+* About
+
+In-tree home for ~dlpk~. In practice should have little in the way of configuration.
