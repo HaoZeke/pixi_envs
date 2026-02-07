@@ -1,0 +1,5 @@
+lammps
+lammps-metatomic-feedstock
+# pixi environments
+.pixi/*
+!.pixi/config.toml
