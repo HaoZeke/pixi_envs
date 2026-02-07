@@ -1,0 +1,7 @@
+* About
+Helper for managing ~metatomic~ in LAMMPS, both the fork and the feedstock.
+
+#+begin_src bash
+gh repo clone metatensor/lammps
+pixi s
+#+end_src
