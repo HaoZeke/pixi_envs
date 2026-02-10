@@ -1,0 +1,8 @@
+* About
+Helpers for handling dependencies for the ~python_packaging_workbench~
+first presented at the 2026 COSMO retreat.
+** Local development
+#+begin_src bash
+gh repo clone HaoZeke/python_packaging_workbench
+pixi s
+#+end_src
