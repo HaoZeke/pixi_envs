@@ -14,53 +14,64 @@ cmd = """
 bash scripts/sync.sh {{ direction }} {{ hostname }}
 """
 
-[feature.metatomic.tasks.gromk]
-cwd = "gromacs/build"
-args = ["buildtype"]
-depends-on = [
-  { task = "setupgro", environment = "metatomic-cuda", "args" = ["{{buildtype}}"] },
-]
-cmd = """
-cmake --build . --parallel $(nproc) && \
-cmake install . --install-prefix $CONDA_PREFIX && \
-cmake --build . --target install
-"""
-
-[feature.metatomic.tasks.grotst]
-cwd = "gromacs/build"
-args = ["buildtype"]
-depends-on = [
-  { task = "gromk", environment = "metatomic-cuda", "args" = ["{{buildtype}}"] },
-]
-cmd = "make check -j$(nproc)"
-
-[feature.metatomic.tasks.setupgro]
+[feature.metatomic.tasks.gromk-tmpi]
 cwd = "gromacs"
-args = [{arg = "buildtype", default = "Debug"}]
-# Uses system compilers, needs nvcc
-# remember, pairlist notifications don't work with GMX_MPI but that's fine
-# because thread MPI works better anyway
+args = [{arg = "buildtype", default = "Release"}]
 cmd = """
-mkdir -p build && \
-cd build && \
+mkdir -p build-tmpi && cd build-tmpi && \
 export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
 export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
+CUDA_FLAGS="" && \
+if command -v nvcc &>/dev/null; then \
+  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
+fi && \
 cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
--D GPU_DEVICE=CUDA \
--D GMX_MPI=ON \
+-D GMX_MPI=OFF \
 -D GMX_METATOMIC=AUTO \
 -D DOWNLOAD_VESIN=ON \
--D CMAKE_CUDA_ARCHITECTURES='80' \
--D TORCH_CUDA_ARCH_LIST='8.0;8.6' \
 -D BUILD_TESTING=ON \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
 -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
 -D CMAKE_C_COMPILER_LAUNCHER=sccache \
--D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
+$CUDA_FLAGS && \
+cmake --build . --parallel $(nproc) && \
+cmake install . --install-prefix $CONDA_PREFIX && \
+cmake --build . --target install
+"""
+
+[feature.metatomic.tasks.gromk-mpi]
+cwd = "gromacs"
+args = [{arg = "buildtype", default = "Release"}]
+cmd = """
+mkdir -p build-mpi && cd build-mpi && \
+export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
+export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
+export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
+export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
+export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
+CUDA_FLAGS="" && \
+if command -v nvcc &>/dev/null; then \
+  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
+fi && \
+cmake .. \
+-D GMX_BUILD_OWN_FFTW=OFF \
+-D GMX_MPI=ON \
+-D GMX_METATOMIC=AUTO \
+-D DOWNLOAD_VESIN=ON \
+-D BUILD_TESTING=ON \
+-D CMAKE_BUILD_TYPE={{ buildtype }} \
+-D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
+-D CMAKE_C_COMPILER_LAUNCHER=sccache \
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
+$CUDA_FLAGS && \
+cmake --build . --parallel $(nproc) && \
+cmake install . --install-prefix $CONDA_PREFIX && \
+cmake --build . --target install
 """
 
 [dependencies]
@@ -75,6 +86,7 @@ pytest = ">=9.0.2,<10"
 
 [environments]
 metatomic-cuda = {features = ["metatomic", "pybase", "cuda"]}
+metatomic-cpu = {features = ["metatomic", "pybase"]}
 feedstock = {features = ["feedstock"]}
 
 [feature.metatomic.pypi-dependencies]
