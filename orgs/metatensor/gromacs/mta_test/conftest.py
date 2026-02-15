@@ -198,6 +198,14 @@ TEST_DIR = Path(__file__).parent
 
 
 @dataclass
+class TimerData:
+    """Parsed timer data from rank 0."""
+
+    entries: list[TimerEntry] = field(default_factory=list)
+    averages: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class MDRunResult:
     """Result of a gmx mdrun invocation."""
 
@@ -206,6 +214,7 @@ class MDRunResult:
     returncode: int
     stdout: str
     stderr: str
+    timers: TimerData = field(default_factory=TimerData)
 
 
 def run_mdrun(
@@ -264,10 +273,17 @@ def run_mdrun(
 
     mdlog = parse_mdlog(workdir / "md.log")
 
+    timers = TimerData()
+    timer_file = workdir / "metatomic_timer_rank_0.log"
+    if timer_file.exists():
+        timers.entries = parse_timer_log(timer_file)
+        timers.averages = timer_averages(timers.entries)
+
     return MDRunResult(
         workdir=workdir,
         mdlog=mdlog,
         returncode=result.returncode,
         stdout=result.stdout,
         stderr=result.stderr,
+        timers=timers,
     )

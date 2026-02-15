@@ -19,9 +19,7 @@ import pytest
 from conftest import (
     MDRunResult,
     parse_debug_log,
-    parse_timer_log,
     run_mdrun,
-    timer_averages,
 )
 
 # Reference step-0 energy from verified serial + DD runs
@@ -258,18 +256,19 @@ class TestDebugLogs:
 class TestTimerOutput:
     """Validate timer log output structure and performance."""
 
+    def _avgs(self, result: MDRunResult) -> dict[str, float]:
+        if not result.timers.averages:
+            pytest.skip("No timer data (GMX_METATOMIC_TIMER not set?)")
+        return result.timers.averages
+
     def test_timer_logs_exist(self, dd12_run):
         timer_files = list(dd12_run.workdir.glob("metatomic_timer_rank_*.log"))
         assert len(timer_files) == 12, (
             f"Expected 12 timer logs, found {len(timer_files)}"
         )
 
-    def test_forward_backward_present(self, dd12_run):
-        timer_file = dd12_run.workdir / "metatomic_timer_rank_0.log"
-        if not timer_file.exists():
-            pytest.skip("No timer log")
-        entries = parse_timer_log(timer_file)
-        names = {e.name for e in entries}
+    def test_required_timers_present(self, dd12_run):
+        avgs = self._avgs(dd12_run)
         for required in [
             "calculateForces",
             "tensorPrep",
@@ -277,21 +276,15 @@ class TestTimerOutput:
             "forward",
             "backward",
         ]:
-            assert required in names, f"Timer '{required}' not found in output"
+            assert required in avgs, f"Timer '{required}' not found in output"
 
     def test_forward_not_zero(self, dd12_run):
-        timer_file = dd12_run.workdir / "metatomic_timer_rank_0.log"
-        if not timer_file.exists():
-            pytest.skip("No timer log")
-        avgs = timer_averages(parse_timer_log(timer_file))
+        avgs = self._avgs(dd12_run)
         assert avgs.get("forward", 0) > 0.01, "forward timer suspiciously small"
 
     def test_buildNL_not_dominant(self, dd12_run):
-        """buildNL should not dominate total time (regression for check_consistency bug)."""
-        timer_file = dd12_run.workdir / "metatomic_timer_rank_0.log"
-        if not timer_file.exists():
-            pytest.skip("No timer log")
-        avgs = timer_averages(parse_timer_log(timer_file))
+        """buildNL should not dominate total time (regression for check_consistency)."""
+        avgs = self._avgs(dd12_run)
         build = avgs.get("buildNL", 0)
         total = avgs.get("calculateForces", 0)
         if total > 0:
@@ -300,4 +293,31 @@ class TestTimerOutput:
                 f"buildNL takes {ratio:.0%} of calculateForces "
                 f"({build:.3f}ms / {total:.3f}ms) — "
                 f"check_consistency may still be enabled"
+            )
+
+    def test_registerAutograd_not_dominant(self, dd12_run):
+        """registerAutograd should be fast when check_consistency=false."""
+        avgs = self._avgs(dd12_run)
+        reg = avgs.get("registerAutograd", 0)
+        total = avgs.get("calculateForces", 0)
+        if total > 0 and reg > 0:
+            ratio = reg / total
+            assert ratio < 0.2, (
+                f"registerAutograd takes {ratio:.0%} of calculateForces "
+                f"({reg:.3f}ms / {total:.3f}ms) — "
+                f"check_consistency may still be enabled"
+            )
+
+    def test_forward_dominates(self, dd12_run):
+        """Model forward pass should be the largest single phase."""
+        avgs = self._avgs(dd12_run)
+        fwd = avgs.get("forward", 0)
+        build = avgs.get("buildNL", 0)
+        prep = avgs.get("tensorPrep", 0)
+        if fwd > 0:
+            assert fwd > build, (
+                f"forward ({fwd:.3f}ms) should exceed buildNL ({build:.3f}ms)"
+            )
+            assert fwd > prep, (
+                f"forward ({fwd:.3f}ms) should exceed tensorPrep ({prep:.3f}ms)"
             )

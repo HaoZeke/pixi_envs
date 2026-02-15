@@ -22,6 +22,8 @@ python create_model.py
 # anyway threadmpi works beter in GROMACS land
 gmx grompp
 gmx mdrun
+# or, better
+pytest
 #+end_src
 Profit.
 ** Development details
