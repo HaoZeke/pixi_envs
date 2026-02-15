@@ -24,7 +24,7 @@ export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_p
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. -C $PIXI_PROJECT_ROOT/scripts/${GMX_BUILD_SUFFIX}_cache.cmake \
+cmake .. -C $PIXI_PROJECT_ROOT/$GMX_GPU_CACHE \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=OFF \
 -D GMX_METATOMIC=AUTO \
@@ -49,7 +49,7 @@ export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_p
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. -C $PIXI_PROJECT_ROOT/scripts/${GMX_BUILD_SUFFIX}_cache.cmake \
+cmake .. -C $PIXI_PROJECT_ROOT/$GMX_GPU_CACHE \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=ON \
 -D GMX_METATOMIC=AUTO \
@@ -85,7 +85,7 @@ metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
 
 [feature.cuda.activation]
-env = { GMX_BUILD_SUFFIX = "cuda" }
+env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_CACHE = "scripts/cuda_cache.cmake" }
 
 [feature.cuda.pypi-dependencies]
 torch = ">=2.7.0, <2.8"
@@ -96,7 +96,7 @@ cuda-libraries-dev = ">=13.0.1,<14"
 cuda-version = ">=13.0,<14"
 
 [feature.cpu.activation]
-env = { GMX_BUILD_SUFFIX = "cpu" }
+env = { GMX_BUILD_SUFFIX = "cpu", GMX_GPU_CACHE = "scripts/cpu_cache.cmake" }
 
 [feature.cpu.pypi-options]
 extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
