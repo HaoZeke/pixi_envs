@@ -9,6 +9,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+import pytest
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "dd8: tests requiring 8 MPI ranks")
+    config.addinivalue_line("markers", "dd12: tests requiring 12 MPI ranks")
+
 
 
 # ---------------------------------------------------------------------------
@@ -268,13 +275,14 @@ def run_mdrun(
             cmd = [gmx, "mdrun", "-ntmpi", str(nranks)]
         else:
             mpirun = os.environ.get("MPIRUN", "mpirun")
-            cmd = [mpirun, "-np", str(nranks), gmx, "mdrun"]
+            cmd = [mpirun, "--oversubscribe", "-np", str(nranks), gmx, "mdrun"]
     else:
         cmd = [gmx, "mdrun"]
 
     result = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, env=env)
 
-    mdlog = parse_mdlog(workdir / "md.log")
+    mdlog_path = workdir / "md.log"
+    mdlog = parse_mdlog(mdlog_path) if mdlog_path.exists() else MDLogData()
 
     timers = TimerData()
     timer_file = workdir / "metatomic_timer_rank_0.log"

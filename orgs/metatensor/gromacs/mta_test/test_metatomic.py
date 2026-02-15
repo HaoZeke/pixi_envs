@@ -77,9 +77,11 @@ class TestMDRunSuccess:
     def test_dd4_exits_zero(self, dd4_run: MDRunResult):
         assert dd4_run.returncode == 0, f"stderr:\n{dd4_run.stderr}"
 
+    @pytest.mark.dd8
     def test_dd8_exits_zero(self, dd8_run: MDRunResult):
         assert dd8_run.returncode == 0, f"stderr:\n{dd8_run.stderr}"
 
+    @pytest.mark.dd12
     def test_dd12_exits_zero(self, dd12_run: MDRunResult):
         assert dd12_run.returncode == 0, f"stderr:\n{dd12_run.stderr}"
 
@@ -116,6 +118,7 @@ class TestStep0Energy:
             f"DD4 step-0 energy {e_dd4:.6f} != serial {e_serial:.6f}"
         )
 
+    @pytest.mark.dd8
     def test_dd8_matches_serial(self, serial_run, dd8_run):
         e_serial = self._step0_metatomic(serial_run)
         e_dd8 = self._step0_metatomic(dd8_run)
@@ -123,6 +126,7 @@ class TestStep0Energy:
             f"DD8 step-0 energy {e_dd8:.6f} != serial {e_serial:.6f}"
         )
 
+    @pytest.mark.dd12
     def test_dd12_matches_serial(self, serial_run, dd12_run):
         e_serial = self._step0_metatomic(serial_run)
         e_dd12 = self._step0_metatomic(dd12_run)
@@ -136,6 +140,7 @@ class TestStep0Energy:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.dd12
 class TestStep0FullEnergy:
     """All energy terms at step 0 must match across configurations."""
 
@@ -185,6 +190,7 @@ class TestEnergyConservation:
             f"Serial energy drift {drift:.3f} kJ/mol/ps/atom too large"
         )
 
+    @pytest.mark.dd12
     def test_dd12_drift(self, dd12_run):
         drift = dd12_run.mdlog.energy_drift
         assert drift is not None, "No energy drift reported"
@@ -192,6 +198,7 @@ class TestEnergyConservation:
             f"DD12 energy drift {drift:.3f} kJ/mol/ps/atom too large"
         )
 
+    @pytest.mark.dd12
     def test_drift_similar_across_dd(self, serial_run, dd12_run):
         """DD should not make drift dramatically worse."""
         d_serial = serial_run.mdlog.energy_drift
@@ -208,6 +215,7 @@ class TestEnergyConservation:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.dd12
 class TestDebugLogs:
     """Validate per-rank debug logs for consistency."""
 
@@ -253,6 +261,7 @@ class TestDebugLogs:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.dd12
 class TestTimerOutput:
     """Validate timer log output structure and performance."""
 
