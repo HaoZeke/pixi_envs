@@ -35,12 +35,16 @@ cd mta_test && python create_model.py
 GMX_BIN=gmx_mpi pytest -k "not dd8 and not dd12"
 #+end_src
 
+Build directories are suffixed by device (~build-tmpi-cuda~, ~build-mpi-cpu~,
+etc.) so CUDA and CPU builds coexist. The test suite in ~mta_test/~ is
+device-agnostic; there are no CUDA-specific tests.
+
 ** CI
 The GROMACS fork at =gromacs/.github/workflows/metatomic-ci.yml= runs
-integration tests on every push to =realDomDec= and on PRs. It checks
-out =pixi_envs= alongside the GROMACS source and builds both thread-MPI
-and real-MPI variants. Tests that need many ranks (dd8, dd12) are
-skipped in CI.
+CPU-only integration tests on every push to =metatomic= and on PRs. It
+checks out =pixi_envs= alongside the GROMACS source and builds both
+thread-MPI and real-MPI variants. Tests that need many ranks (dd8, dd12)
+are skipped in CI.
 ** Development details
 For working remotely, consider the ~to~ and ~from~ tasks.
 Meant for usage with remote servers.
