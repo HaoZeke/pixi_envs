@@ -24,8 +24,10 @@ export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_p
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. -C $PIXI_PROJECT_ROOT/$GMX_GPU_CACHE \
+cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
+-D GPU_DEVICE=$GMX_GPU_DEVICE \
+-D CMAKE_CUDA_ARCHITECTURES=$GMX_CUDA_ARCH \
 -D GMX_MPI=OFF \
 -D GMX_METATOMIC=AUTO \
 -D DOWNLOAD_VESIN=ON \
@@ -54,8 +56,10 @@ export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_p
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. -C $PIXI_PROJECT_ROOT/$GMX_GPU_CACHE \
+cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
+-D GPU_DEVICE=$GMX_GPU_DEVICE \
+-D CMAKE_CUDA_ARCHITECTURES=$GMX_CUDA_ARCH \
 -D GMX_MPI=ON \
 -D GMX_METATOMIC=AUTO \
 -D DOWNLOAD_VESIN=ON \
@@ -95,7 +99,7 @@ metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
 
 [feature.cuda.activation]
-env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_CACHE = "scripts/cuda_cache.cmake" }
+env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_DEVICE = "CUDA", GMX_CUDA_ARCH = "80" }
 
 [feature.cuda.pypi-dependencies]
 torch = ">=2.7.0, <2.8"
@@ -106,7 +110,7 @@ cuda-libraries-dev = ">=13.0.1,<14"
 cuda-version = ">=13.0,<14"
 
 [feature.cpu.activation]
-env = { GMX_BUILD_SUFFIX = "cpu", GMX_GPU_CACHE = "scripts/cpu_cache.cmake" }
+env = { GMX_BUILD_SUFFIX = "cpu", GMX_GPU_DEVICE = "OFF", GMX_CUDA_ARCH = "" }
 
 [feature.cpu.pypi-options]
 extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
