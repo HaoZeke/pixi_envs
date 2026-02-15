@@ -18,20 +18,13 @@ bash scripts/sync.sh {{ direction }} {{ hostname }}
 cwd = "gromacs"
 args = [{arg = "buildtype", default = "Release"}]
 cmd = """
-SUFFIX="cpu" && \
-CUDA_FLAGS="" && \
-if command -v nvcc &>/dev/null; then \
-  SUFFIX="cuda"; \
-  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
-fi && \
-BUILDDIR="build-tmpi-$SUFFIX" && \
-mkdir -p $BUILDDIR && cd $BUILDDIR && \
+mkdir -p build-tmpi-$GMX_BUILD_SUFFIX && cd build-tmpi-$GMX_BUILD_SUFFIX && \
 export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
 export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. \
+cmake .. -C $PIXI_PROJECT_ROOT/scripts/${GMX_BUILD_SUFFIX}_cache.cmake \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=OFF \
 -D GMX_METATOMIC=AUTO \
@@ -40,8 +33,7 @@ cmake .. \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
 -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
 -D CMAKE_C_COMPILER_LAUNCHER=sccache \
--D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
-$CUDA_FLAGS && \
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH && \
 cmake --build . --parallel $(nproc) && \
 cmake install . --install-prefix $CONDA_PREFIX && \
 cmake --build . --target install
@@ -51,20 +43,13 @@ cmake --build . --target install
 cwd = "gromacs"
 args = [{arg = "buildtype", default = "Release"}]
 cmd = """
-SUFFIX="cpu" && \
-CUDA_FLAGS="" && \
-if command -v nvcc &>/dev/null; then \
-  SUFFIX="cuda"; \
-  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
-fi && \
-BUILDDIR="build-mpi-$SUFFIX" && \
-mkdir -p $BUILDDIR && cd $BUILDDIR && \
+mkdir -p build-mpi-$GMX_BUILD_SUFFIX && cd build-mpi-$GMX_BUILD_SUFFIX && \
 export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
 export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-cmake .. \
+cmake .. -C $PIXI_PROJECT_ROOT/scripts/${GMX_BUILD_SUFFIX}_cache.cmake \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=ON \
 -D GMX_METATOMIC=AUTO \
@@ -73,8 +58,7 @@ cmake .. \
 -D CMAKE_BUILD_TYPE={{ buildtype }} \
 -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
 -D CMAKE_C_COMPILER_LAUNCHER=sccache \
--D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
-$CUDA_FLAGS && \
+-D CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH && \
 cmake --build . --parallel $(nproc) && \
 cmake install . --install-prefix $CONDA_PREFIX && \
 cmake --build . --target install
@@ -100,6 +84,9 @@ vesin = ">=0.4.2, <0.5"
 metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
 
+[feature.cuda.activation]
+env = { GMX_BUILD_SUFFIX = "cuda" }
+
 [feature.cuda.pypi-dependencies]
 torch = ">=2.7.0, <2.8"
 
@@ -107,6 +94,9 @@ torch = ">=2.7.0, <2.8"
 cuda-compiler = ">=13.0.1,<14"
 cuda-libraries-dev = ">=13.0.1,<14"
 cuda-version = ">=13.0,<14"
+
+[feature.cpu.activation]
+env = { GMX_BUILD_SUFFIX = "cpu" }
 
 [feature.cpu.pypi-options]
 extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
