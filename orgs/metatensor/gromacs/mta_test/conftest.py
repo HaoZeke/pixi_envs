@@ -264,8 +264,11 @@ def run_mdrun(
         env["GMX_METATOMIC_TIMER"] = "1"
 
     if nranks > 1:
-        mpirun = os.environ.get("MPIRUN", "mpirun")
-        cmd = [mpirun, "-np", str(nranks), gmx, "mdrun"]
+        if os.environ.get("GMX_THREAD_MPI", "") or not gmx.endswith("_mpi"):
+            cmd = [gmx, "mdrun", "-ntmpi", str(nranks)]
+        else:
+            mpirun = os.environ.get("MPIRUN", "mpirun")
+            cmd = [mpirun, "-np", str(nranks), gmx, "mdrun"]
     else:
         cmd = [gmx, "mdrun"]
 

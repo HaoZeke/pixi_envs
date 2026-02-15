@@ -12,20 +12,35 @@ git clone https://gitlab.com/HaoZeke/gromacs.git
 Regardless of where a contribution begins, a single merge request for
 =metatomic= proceeds through the GitLab fork to the GROMACS upstream repository.
 ** Usage
-Standard builds:
+*** CUDA builds (local workstation)
 #+begin_src bash
-# or Debug
-pixi r gromk Release
+pixi r -e metatomic-cuda gromk-tmpi Release
 cd mta_test
 python create_model.py
-# pairlist has no gmx_mpi support
-# anyway threadmpi works beter in GROMACS land
-gmx grompp
-gmx mdrun
-# or, better
 pytest
 #+end_src
-Profit.
+
+*** CPU builds (CI / no GPU)
+Thread-MPI (binary: ~gmx~):
+#+begin_src bash
+pixi r -e metatomic-cpu gromk-tmpi Release
+cd mta_test && python create_model.py
+GMX_BIN=gmx pytest -k "not dd8 and not dd12"
+#+end_src
+
+Real MPI (binary: ~gmx_mpi~):
+#+begin_src bash
+pixi r -e metatomic-cpu gromk-mpi Release
+cd mta_test && python create_model.py
+GMX_BIN=gmx_mpi pytest -k "not dd8 and not dd12"
+#+end_src
+
+** CI
+The GROMACS fork at =gromacs/.github/workflows/metatomic-ci.yml= runs
+integration tests on every push to =realDomDec= and on PRs. It checks
+out =pixi_envs= alongside the GROMACS source and builds both thread-MPI
+and real-MPI variants. Tests that need many ranks (dd8, dd12) are
+skipped in CI.
 ** Development details
 For working remotely, consider the ~to~ and ~from~ tasks.
 Meant for usage with remote servers.
