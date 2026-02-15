@@ -18,16 +18,19 @@ bash scripts/sync.sh {{ direction }} {{ hostname }}
 cwd = "gromacs"
 args = [{arg = "buildtype", default = "Release"}]
 cmd = """
-mkdir -p build-tmpi && cd build-tmpi && \
+SUFFIX="cpu" && \
+CUDA_FLAGS="" && \
+if command -v nvcc &>/dev/null; then \
+  SUFFIX="cuda"; \
+  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
+fi && \
+BUILDDIR="build-tmpi-$SUFFIX" && \
+mkdir -p $BUILDDIR && cd $BUILDDIR && \
 export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
 export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-CUDA_FLAGS="" && \
-if command -v nvcc &>/dev/null; then \
-  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
-fi && \
 cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=OFF \
@@ -48,16 +51,19 @@ cmake --build . --target install
 cwd = "gromacs"
 args = [{arg = "buildtype", default = "Release"}]
 cmd = """
-mkdir -p build-mpi && cd build-mpi && \
+SUFFIX="cpu" && \
+CUDA_FLAGS="" && \
+if command -v nvcc &>/dev/null; then \
+  SUFFIX="cuda"; \
+  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
+fi && \
+BUILDDIR="build-mpi-$SUFFIX" && \
+mkdir -p $BUILDDIR && cd $BUILDDIR && \
 export TORCH_PREFIX=$(python -c "import torch; print(torch.utils.cmake_prefix_path)") && \
 export MTS_PREFIX=$(python -c "import metatensor; print(metatensor.utils.cmake_prefix_path)") && \
 export MTS_TORCH_PREFIX=$(python -c "import metatensor.torch; print(metatensor.torch.utils.cmake_prefix_path)") && \
 export MTA_TORCH_PREFIX=$(python -c "import metatomic.torch; print(metatomic.torch.utils.cmake_prefix_path)") && \
 export CMAKE_PREFIX_PATH="$TORCH_PREFIX;$MTS_PREFIX;$MTS_TORCH_PREFIX;$MTA_TORCH_PREFIX" && \
-CUDA_FLAGS="" && \
-if command -v nvcc &>/dev/null; then \
-  CUDA_FLAGS="-D GPU_DEVICE=CUDA -D CMAKE_CUDA_ARCHITECTURES=80 -D TORCH_CUDA_ARCH_LIST=8.0;8.6"; \
-fi && \
 cmake .. \
 -D GMX_BUILD_OWN_FFTW=OFF \
 -D GMX_MPI=ON \
