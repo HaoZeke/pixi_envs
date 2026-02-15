@@ -2,9 +2,15 @@
 authors = ["Rohit Goswami <rgoswami@ieee.org>"]
 channels = ["conda-forge"]
 name = "python_packaging_workbench"
-platforms = ["linux-64"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
 
 [dependencies]
+git = ">=2.28"
+r = ">=4"
+pandoc = ">=3"
+r-sandpaper = ">=0.18.5,<0.19"
+r-pegboard = ">=0.7.9,<0.8"
+r-varnish = ">=1.0.9,<2"
