@@ -92,19 +92,27 @@ pytest = ">=9.0.2,<10"
 
 [environments]
 metatomic-cuda = {features = ["metatomic", "pybase", "cuda"]}
-metatomic-cpu = {features = ["metatomic", "pybase"]}
+metatomic-cpu = {features = ["metatomic", "pybase", "cpu"]}
 feedstock = {features = ["feedstock"]}
 
 [feature.metatomic.pypi-dependencies]
 vesin = ">=0.4.2, <0.5"
-torch = ">=2.7.0, <2.8"
 metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
+
+[feature.cuda.pypi-dependencies]
+torch = ">=2.7.0, <2.8"
 
 [feature.cuda.dependencies]
 cuda-compiler = ">=13.0.1,<14"
 cuda-libraries-dev = ">=13.0.1,<14"
 cuda-version = ">=13.0,<14"
+
+[feature.cpu.pypi-options]
+extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
+
+[feature.cpu.pypi-dependencies]
+torch = ">=2.7.0, <2.8"
 
 [feature.metatomic.dependencies]
 mkl = ">=2025.2.0,<2026"
