@@ -8,7 +8,9 @@ version = "0.1.0"
 [tasks]
 test-pet = { cmd = "cd $PIXI_PROJECT_ROOT/metatrain/src/metatrain/pet/tests && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet --with pytest python -m pytest . --import-mode=append -x -v", env = { UV_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu", PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu" } }
 test-pet-cuda = { cmd = "cd $PIXI_PROJECT_ROOT/metatrain/src/metatrain/pet/tests && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet --with pytest python -m pytest . --import-mode=append -x -v" }
-bench-compile = { cmd = "cd $PIXI_PROJECT_ROOT && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet python pet_bench/bench_compile.py" }
+bench-compile = { cmd = "cd $PIXI_PROJECT_ROOT && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet python pet_bench/bench_compile.py --config all" }
+bench-compile-fixed = { cmd = "cd $PIXI_PROJECT_ROOT && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet python pet_bench/bench_compile.py --config fixed" }
+bench-compile-adaptive = { cmd = "cd $PIXI_PROJECT_ROOT && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet python pet_bench/bench_compile.py --config adaptive" }
 
 [dependencies]
 nodejs = ">=24.9.0,<24.10"
