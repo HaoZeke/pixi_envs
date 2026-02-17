@@ -6,13 +6,32 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
+test-pet = { cmd = "cd $PIXI_PROJECT_ROOT/metatrain/src/metatrain/pet/tests && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet --with pytest python -m pytest . --import-mode=append -x -v", env = { UV_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu", PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cpu" } }
+test-pet-cuda = { cmd = "cd $PIXI_PROJECT_ROOT/metatrain/src/metatrain/pet/tests && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet --with pytest python -m pytest . --import-mode=append -x -v" }
+bench-compile = { cmd = "cd $PIXI_PROJECT_ROOT && uv run --project $PIXI_PROJECT_ROOT/metatrain --extra pet python pet_bench/bench_compile.py" }
 
 [dependencies]
 nodejs = ">=24.9.0,<24.10"
 ipython = ">=9.9.0,<10"
-pytorch = "<2.10"
 uv = ">=0.9.28,<0.10"
 pip = ">=26.0,<27"
 
-[pypi-dependencies]
+[feature.cpu.dependencies]
+pytorch = "<2.10"
+
+[feature.cpu.pypi-dependencies]
 metatomic-torch = ">=0.1.7, <0.2"
+
+[feature.cuda.dependencies]
+cuda-compiler = ">=12.9.0,<13"
+cuda-libraries-dev = ">=12.9.0,<13"
+cuda-version = ">=12.9,<13"
+python = ">=3.12,<3.13"
+
+[feature.cuda.pypi-dependencies]
+torch = ">=2.9.0, <2.10"
+metatomic-torch = ">=0.1.7, <0.2"
+
+[environments]
+default = {features = ["cpu"], solve-group = "default"}
+cuda = {features = ["cuda"], solve-group = "cuda"}
