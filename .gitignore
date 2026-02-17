@@ -7,6 +7,7 @@ mutagen.yml
 ### AI session data (entire.dev, claude code)
 **/.entire/
 **/.claude/
+conda/CLAUDE.md
 
 ### Large model artifacts and work directories (keep in private repo)
 **/base_upet/
