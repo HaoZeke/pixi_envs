@@ -1,0 +1,55 @@
+#+TITLE: PET Compile Benchmarks
+#+DATE: 2026-02-17
+
+* Overview
+
+Benchmarks for PET full-graph FX compilation (=torch.compile=) vs eager mode.
+
+Compares per-step wall-clock time for the compiled training path against the
+default eager path, measuring compilation overhead and steady-state speedup.
+
+* Running
+
+From the pixi_envs metatrain workspace root:
+
+#+BEGIN_SRC shell
+# GPU (recommended)
+pixi run -e cuda bench-compile
+
+# CPU (slower, smaller gains expected)
+pixi run bench-compile
+#+END_SRC
+
+Or directly:
+
+#+BEGIN_SRC shell
+pixi run -e cuda python pet_bench/bench_compile.py
+#+END_SRC
+
+* What It Measures
+
+- *Eager mode*: Standard PET training via =evaluate_model()= with
+  =is_training=True= (forces/stress via double backward).
+- *Compiled mode*: Full-graph FX compilation via =compile_pet_model()=
+  which traces the entire forward + force/stress into a single graph
+  and compiles with =torch.compile(dynamic=True, fullgraph=True)=.
+
+For each mode, runs 50 training steps (after warmup) and reports median,
+mean, std, min, max step times.
+
+* Configuration
+
+Default PET hyperparameters (2.9M params), =qm9_reduced_100.xyz= (100
+structures, batch_size=8). Energy target with forces and stress gradients.
+
+* Reference Results
+
+** RTX 4070 Ti SUPER (SM 8.9, 16.7 GB, PyTorch 2.9.1+cu128)
+
+| Metric              | Value          |
+|---------------------+----------------|
+| Eager median step   | 24.9 ms        |
+| Compiled median     | 15.1 ms        |
+| Speedup             | 1.65x          |
+| Compile overhead    | 10.0 s         |
+| Break-even          | ~85 epochs     |
