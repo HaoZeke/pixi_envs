@@ -1,0 +1,53 @@
+#+TITLE: metatrain pixi environment
+
+* About
+Helper for developing and testing [[https://github.com/metatensor/metatrain][metatrain]], the machine learning
+interatomic potential training framework. Provides CPU and CUDA environments
+with =uv= for editable installs of the =metatrain= repository.
+
+#+begin_src bash
+gh repo clone HaoZeke/metatrain metatrain
+pixi s -e cuda   # or: pixi s  (CPU-only)
+#+end_src
+
+The =metatrain/= subdirectory is a clone of the fork; =pixi= manages the
+conda-level dependencies (PyTorch, CUDA toolkit) while =uv= handles the
+Python-level editable install with extras.
+
+* Environments
+
+| Name      | PyTorch              | CUDA   | Use case                 |
+|-----------+----------------------+--------+--------------------------|
+| =default= | conda-forge (CPU)    | --     | CI, laptops, CPU testing |
+| =cuda=    | PyPI (>=2.9, cu128)  | 12.9   | GPU training, benchmarks |
+
+* Tasks
+
+** Testing PET
+
+#+begin_src bash
+# CPU (uses pytorch CPU wheels)
+pixi r test-pet
+
+# CUDA
+pixi r -e cuda test-pet-cuda
+#+end_src
+
+Both tasks run =pytest= on =metatrain/src/metatrain/pet/tests/= via =uv run=
+with the =pet= extra.
+
+** Benchmarking torch.compile
+
+#+begin_src bash
+pixi r -e cuda bench-compile
+#+end_src
+
+Runs =pet_bench/bench_compile.py=, comparing eager vs full-graph FX compiled
+PET training. See =pet_bench/readme.org= for details and reference results.
+
+* Directory structure
+
+- =metatrain/= -- Clone of the metatrain repository (fork)
+- =pet_bench/= -- Benchmark scripts for PET compilation
+- =base_upet/= -- Working directory for UPET experiments (gitignored)
+- =janus-share/= -- Clean PET reimplementation / UPET (gitignored)
