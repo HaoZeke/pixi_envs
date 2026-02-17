@@ -1,0 +1,14 @@
+[workspace]
+name = "pixi-envs"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+nim = ">=2.2.6,<3"
+
+[tasks]
+seal = { cmd = "nim r scripts/vault.nim seal", description = "Encrypt all vault-tracked files" }
+unseal = { cmd = "nim r scripts/vault.nim unseal", description = "Decrypt all vault-tracked files" }
+vault-status = { cmd = "nim r scripts/vault.nim status", description = "Show vault sync status" }
+vault-list = { cmd = "nim r scripts/vault.nim list", description = "List vault-tracked files" }
