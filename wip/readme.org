@@ -1,0 +1,4 @@
+* About
+
+Projects which need to be synced but do not otherwise have a clear
+location yet.
