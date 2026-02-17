@@ -1,7 +1,10 @@
 * About
-Helper for managing ~metatomic~ in LAMMPS, both the fork and the feedstock.
+Helper for managing =metatomic= integration in [[https://github.com/metatensor/lammps][LAMMPS]], both the fork and the
+conda-forge feedstock.
 
 #+begin_src bash
 gh repo clone metatensor/lammps
 pixi s
 #+end_src
+
+See the [[file:../gromacs/readme.org][GROMACS helper]] for a comparable but more mature integration workflow.

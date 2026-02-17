@@ -1,0 +1,24 @@
+#+TITLE: metatomic pixi environment
+
+* About
+Helper for developing [[https://github.com/metatensor/metatomic][metatomic]], the atomistic model interface layer.
+
+#+begin_src bash
+gh repo clone metatensor/metatomic metatomic
+pixi s
+#+end_src
+
+* Environments
+
+| Name   | Purpose                               |
+|--------+---------------------------------------|
+| =docs= | Build Doxygen + Doxyrest docs via tox |
+
+* Tasks
+
+Documentation builds use =tox= from the =docs= environment:
+#+begin_src bash
+pixi s -e docs
+cd metatomic
+tox -e docs
+#+end_src
