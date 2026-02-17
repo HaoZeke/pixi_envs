@@ -5,19 +5,21 @@ Measures wall-clock time per training step for both paths, reporting:
   - Steady-state step time (median of subsequent steps)
   - Speedup ratio
 
-Usage:
-  pixi run -e cuda bench-compile
+Supports both fixed cutoff and adaptive cutoff (num_neighbors_adaptive)
+configurations via --config flag.
 
-Or directly:
-  pixi run -e cuda python pet_bench/bench_compile.py
+Usage:
+  pixi run -e cuda bench-compile            # both configs
+  pixi run -e cuda bench-compile-fixed      # fixed cutoff only
+  pixi run -e cuda bench-compile-adaptive   # adaptive cutoff only
 """
 
+import argparse
 import gc
-import os
 import statistics
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import torch
 from omegaconf import OmegaConf
@@ -54,10 +56,13 @@ def build_model_and_data(
     batch_size: int = 8,
     with_forces: bool = True,
     with_stress: bool = True,
+    num_neighbors_adaptive: Optional[int] = None,
 ) -> Tuple[PET, torch.utils.data.DataLoader, Dict[str, TargetInfo]]:
     """Set up a PET model, dataloader, and target info for benchmarking."""
     hypers = get_default_hypers("pet")
     model_hypers = hypers["model"]
+    if num_neighbors_adaptive is not None:
+        model_hypers["num_neighbors_adaptive"] = num_neighbors_adaptive
 
     energy_target = {
         "quantity": "energy",
@@ -308,31 +313,27 @@ def bench_compiled(
     return compile_time, times
 
 
-def main() -> None:
-    print("=" * 70)
-    print("PET torch.compile Benchmark")
-    print("=" * 70)
+def _run_config(
+    config_name: str,
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int,
+    n_steps: int,
+    num_neighbors_adaptive: Optional[int] = None,
+) -> Dict:
+    """Run eager + compiled benchmarks for a single configuration.
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dtype = torch.float32
-    batch_size = 8
-    n_steps = 50
-
-    print(f"\nDevice: {device}")
-    if device.type == "cuda":
-        print(f"GPU: {torch.cuda.get_device_name(0)}")
-        props = torch.cuda.get_device_properties(0)
-        print(f"VRAM: {props.total_memory / 1e9:.1f} GB")
-    print(f"PyTorch: {torch.__version__}")
-    print(f"Dataset: {DATASET_PATH}")
-    print(f"Batch size: {batch_size}")
-    print(f"Steps: {n_steps}")
-    print()
+    Returns dict with timing results.
+    """
+    print(f"\n{'=' * 70}")
+    print(f"  {config_name}")
+    print(f"{'=' * 70}")
 
     # ---- Eager mode ----
-    print("--- Eager mode (no compile) ---")
+    print(f"\n--- Eager mode ({config_name}) ---")
     model_eager, dl_eager, targets_eager = build_model_and_data(
-        device, dtype, batch_size
+        device, dtype, batch_size,
+        num_neighbors_adaptive=num_neighbors_adaptive,
     )
     n_params = sum(p.numel() for p in model_eager.parameters())
     print(f"Model parameters: {n_params:,}")
@@ -350,7 +351,6 @@ def main() -> None:
         f"  Min / Max:        "
         f"{min(eager_times)*1000:.1f} / {max(eager_times)*1000:.1f} ms"
     )
-    print()
 
     del model_eager, dl_eager
     gc.collect()
@@ -358,9 +358,10 @@ def main() -> None:
         torch.cuda.empty_cache()
 
     # ---- Compiled mode ----
-    print("--- Compiled mode (FX + torch.compile) ---")
+    print(f"\n--- Compiled mode ({config_name}) ---")
     model_comp, dl_comp, targets_comp = build_model_and_data(
-        device, dtype, batch_size
+        device, dtype, batch_size,
+        num_neighbors_adaptive=num_neighbors_adaptive,
     )
 
     compile_time, compiled_times = bench_compiled(
@@ -378,36 +379,104 @@ def main() -> None:
         f"  Min / Max:        "
         f"{min(compiled_times)*1000:.1f} / {max(compiled_times)*1000:.1f} ms"
     )
-    print()
 
-    # ---- Summary ----
-    speedup = eager_median / compiled_median
-    if speedup > 1.0:
-        breakeven = compile_time / (eager_median - compiled_median)
-    else:
-        breakeven = float("inf")
-
-    print("=" * 70)
-    print("SUMMARY")
-    print("=" * 70)
-    print(f"  Eager median step:     {eager_median*1000:.1f} ms")
-    print(f"  Compiled median step:  {compiled_median*1000:.1f} ms")
-    print(f"  Speedup:               {speedup:.2f}x")
-    print(f"  Compile overhead:      {compile_time:.1f} s")
-    if speedup > 1.0:
-        n_batches = len(dl_comp)
-        print(
-            f"  Break-even after:      "
-            f"{breakeven:.0f} steps (~{breakeven/max(n_batches,1):.0f} epochs)"
-        )
-    else:
-        print("  (No speedup on this device/config)")
-    print()
+    n_batches = len(dl_comp)
 
     del model_comp, dl_comp
     gc.collect()
     if device.type == "cuda":
         torch.cuda.empty_cache()
+
+    return {
+        "name": config_name,
+        "eager_median": eager_median,
+        "compiled_median": compiled_median,
+        "compile_time": compile_time,
+        "n_batches": n_batches,
+    }
+
+
+def _print_summary(results: List[Dict]) -> None:
+    """Print summary table for all benchmark configs."""
+    print(f"\n{'=' * 70}")
+    print("SUMMARY")
+    print(f"{'=' * 70}")
+    for r in results:
+        speedup = r["eager_median"] / r["compiled_median"]
+        print(f"\n  [{r['name']}]")
+        print(f"  Eager median step:     {r['eager_median']*1000:.1f} ms")
+        print(f"  Compiled median step:  {r['compiled_median']*1000:.1f} ms")
+        print(f"  Speedup:               {speedup:.2f}x")
+        print(f"  Compile overhead:      {r['compile_time']:.1f} s")
+        if speedup > 1.0:
+            breakeven = r["compile_time"] / (
+                r["eager_median"] - r["compiled_median"]
+            )
+            print(
+                f"  Break-even after:      "
+                f"{breakeven:.0f} steps "
+                f"(~{breakeven/max(r['n_batches'],1):.0f} epochs)"
+            )
+        else:
+            print("  (No speedup on this device/config)")
+    print()
+
+
+CONFIGS = {
+    "fixed": {"name": "Fixed cutoff", "nna": None},
+    "adaptive": {"name": "Adaptive cutoff (16)", "nna": 16},
+}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="PET torch.compile benchmark")
+    parser.add_argument(
+        "--config",
+        choices=["fixed", "adaptive", "all"],
+        default="all",
+        help="Which cutoff config to benchmark (default: all)",
+    )
+    parser.add_argument(
+        "--steps", type=int, default=50,
+        help="Number of steady-state steps to measure (default: 50)",
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=8,
+        help="Batch size (default: 8)",
+    )
+    args = parser.parse_args()
+
+    print("=" * 70)
+    print("PET torch.compile Benchmark")
+    print("=" * 70)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dtype = torch.float32
+
+    print(f"\nDevice: {device}")
+    if device.type == "cuda":
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        props = torch.cuda.get_device_properties(0)
+        print(f"VRAM: {props.total_memory / 1e9:.1f} GB")
+    print(f"PyTorch: {torch.__version__}")
+    print(f"Dataset: {DATASET_PATH}")
+    print(f"Batch size: {args.batch_size}")
+    print(f"Steps: {args.steps}")
+
+    if args.config == "all":
+        configs_to_run = list(CONFIGS.values())
+    else:
+        configs_to_run = [CONFIGS[args.config]]
+
+    results = []
+    for cfg in configs_to_run:
+        result = _run_config(
+            cfg["name"], device, dtype, args.batch_size, args.steps,
+            num_neighbors_adaptive=cfg["nna"],
+        )
+        results.append(result)
+
+    _print_summary(results)
 
 
 if __name__ == "__main__":
