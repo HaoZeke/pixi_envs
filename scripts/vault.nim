@@ -4,7 +4,7 @@
 ## using GPG. Both filenames and contents are hidden in git.
 ##
 ## Usage:
-##   nim r scripts/vault.nim <seal|unseal|add|rm|list|status> [path]
+##   nim r scripts/vault.nim <seal|unseal|add|rm|mv|list|status> [path]
 
 import std/[os, osproc, strutils, strformat, streams, terminal, sysrand]
 
@@ -235,6 +235,37 @@ proc remove(repo, path: string) =
   saveManifest(repo, newEntries)
   echo "  (local plaintext file NOT deleted)"
 
+proc move(repo, oldPath, newPath: string) =
+  let oldRel = if oldPath.isAbsolute: relativePath(oldPath, repo) else: oldPath
+  let newRel = if newPath.isAbsolute: relativePath(newPath, repo) else: newPath
+  let newAbs = if newPath.isAbsolute: newPath else: repo / newPath
+
+  var entries = loadManifest(repo)
+  var found = false
+  for e in entries.mitems:
+    if e.path == oldRel:
+      found = true
+      # Move plaintext if it exists at old location
+      let oldAbs = repo / oldRel
+      if fileExists(oldAbs):
+        createDir(newAbs.parentDir)
+        moveFile(oldAbs, newAbs)
+        echo &"  Moved {oldRel} → {newRel}"
+      elif fileExists(newAbs):
+        echo &"  File already at {newRel}"
+      else:
+        stderr.writeLine &"FATAL: file not found at {oldRel} or {newRel}"
+        quit 1
+      e.path = newRel
+      break
+
+  if not found:
+    stderr.writeLine &"Not in vault: {oldRel}"
+    quit 1
+
+  saveManifest(repo, entries)
+  echo &"  Updated manifest (blob unchanged)"
+
 proc list(repo: string) =
   let entries = loadManifest(repo)
   if entries.len == 0:
@@ -281,7 +312,7 @@ proc status(repo: string) =
 proc main() =
   let repo = repoRoot()
   if paramCount() < 1:
-    stderr.writeLine "usage: vault <seal|unseal|add|rm|list|status> [path]"
+    stderr.writeLine "usage: vault <seal|unseal|add|rm|mv|list|status> [path]"
     quit 1
   let cmd = paramStr(1)
   case cmd
@@ -299,6 +330,11 @@ proc main() =
       stderr.writeLine "usage: vault rm <path>"
       quit 1
     remove(repo, paramStr(2))
+  of "mv":
+    if paramCount() < 3:
+      stderr.writeLine "usage: vault mv <old-path> <new-path>"
+      quit 1
+    move(repo, paramStr(2), paramStr(3))
   of "list":
     list(repo)
   of "status":
