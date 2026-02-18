@@ -22,16 +22,16 @@ pixi run unseal
 pixi run seal
 
 # Check which files are modified vs the vault
-pixi run vault-status
+pixi run vault status
 
 # List all vault-tracked files
-pixi run vault-list
+pixi run vault list
 
 # Add a new file to the vault
-pixi run -- nim r scripts/vault.nim add path/to/file
+pixi run vault add path/to/file
 
 # Remove a file from the vault
-pixi run -- nim r scripts/vault.nim rm path/to/file
+pixi run vault rm path/to/file
 #+end_src
 *** Usage
 Instead of running a script manually, we manage the daemon:
