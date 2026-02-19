@@ -8,10 +8,11 @@ Environment variables:
     MPIRUN:   path to mpirun (default: mpirun)
 
 These tests verify that the metatomic force provider gives identical
-results regardless of domain decomposition partitioning, and that
-energies/forces are physically reasonable.
+results regardless of domain decomposition partitioning, NL mode
+(full/pairlist), and that energies/forces are physically reasonable.
 """
 
+import os
 import shutil
 
 import pytest
@@ -59,6 +60,57 @@ def dd8_run():
 def dd12_run():
     """Run simulation with 12 DD ranks."""
     result = run_mdrun(nranks=12, nsteps=100, timer=True)
+    yield result
+    shutil.rmtree(result.workdir, ignore_errors=True)
+
+
+# --- Newton-mode (nl-mode) fixtures ---
+
+
+@pytest.fixture(scope="session")
+def dd4_pairlist_run():
+    """Run DD4 with nl-mode=pairlist (GROMACS excluded pairlist only)."""
+    result = run_mdrun(
+        nranks=4,
+        nsteps=100,
+        extra_mdp={"metatomic-nl-mode": "pairlist"},
+    )
+    yield result
+    shutil.rmtree(result.workdir, ignore_errors=True)
+
+
+@pytest.fixture(scope="session")
+def dd4_full_run():
+    """Run DD4 with nl-mode=full (backward pair exchange, explicit)."""
+    result = run_mdrun(
+        nranks=4,
+        nsteps=100,
+        extra_mdp={"metatomic-nl-mode": "full"},
+    )
+    yield result
+    shutil.rmtree(result.workdir, ignore_errors=True)
+
+
+@pytest.fixture(scope="session")
+def dd4_envvar_override_run():
+    """Run DD4 with MDP nl-mode=full overridden to pairlist via env var."""
+    env_patch = {"GMX_METATOMIC_NL_MODE": "pairlist"}
+    old_vals = {}
+    for k, v in env_patch.items():
+        old_vals[k] = os.environ.get(k)
+        os.environ[k] = v
+    try:
+        result = run_mdrun(
+            nranks=4,
+            nsteps=100,
+            extra_mdp={"metatomic-nl-mode": "full"},
+        )
+    finally:
+        for k, v in old_vals.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
     yield result
     shutil.rmtree(result.workdir, ignore_errors=True)
 
@@ -330,3 +382,77 @@ class TestTimerOutput:
             assert fwd > prep, (
                 f"forward ({fwd:.3f}ms) should exceed tensorPrep ({prep:.3f}ms)"
             )
+
+
+# ---------------------------------------------------------------------------
+# Newton NL mode tests (nl-mode=full vs nl-mode=pairlist)
+# ---------------------------------------------------------------------------
+
+
+class TestNLModeEnergy:
+    """Both NL modes must produce the same step-0 energy as serial."""
+
+    def _step0_metatomic(self, result: MDRunResult) -> float:
+        assert result.returncode == 0, f"mdrun failed:\n{result.stderr}"
+        assert len(result.mdlog.frames) >= 1, "No energy frames found"
+        f = result.mdlog.frames[0]
+        assert f.step == 0
+        return f.metatomic
+
+    def test_dd4_full_exits_zero(self, dd4_full_run):
+        assert dd4_full_run.returncode == 0, f"stderr:\n{dd4_full_run.stderr}"
+
+    def test_dd4_pairlist_exits_zero(self, dd4_pairlist_run):
+        assert dd4_pairlist_run.returncode == 0, f"stderr:\n{dd4_pairlist_run.stderr}"
+
+    def test_dd4_full_matches_serial(self, serial_run, dd4_full_run):
+        """nl-mode=full DD4 must match serial energy."""
+        e_serial = self._step0_metatomic(serial_run)
+        e_full = self._step0_metatomic(dd4_full_run)
+        assert e_full == pytest.approx(e_serial, abs=0.01), (
+            f"DD4 full-mode energy {e_full:.6f} != serial {e_serial:.6f}"
+        )
+
+    def test_dd4_pairlist_matches_serial(self, serial_run, dd4_pairlist_run):
+        """nl-mode=pairlist DD4 must match serial energy."""
+        e_serial = self._step0_metatomic(serial_run)
+        e_pairlist = self._step0_metatomic(dd4_pairlist_run)
+        assert e_pairlist == pytest.approx(e_serial, abs=0.01), (
+            f"DD4 pairlist-mode energy {e_pairlist:.6f} != serial {e_serial:.6f}"
+        )
+
+    def test_full_and_pairlist_agree(self, dd4_full_run, dd4_pairlist_run):
+        """Both NL modes must produce the same energy."""
+        e_full = self._step0_metatomic(dd4_full_run)
+        e_pairlist = self._step0_metatomic(dd4_pairlist_run)
+        assert e_full == pytest.approx(e_pairlist, abs=0.01), (
+            f"full-mode {e_full:.6f} != pairlist-mode {e_pairlist:.6f}"
+        )
+
+    def test_envvar_override(self, dd4_pairlist_run, dd4_envvar_override_run):
+        """GMX_METATOMIC_NL_MODE=pairlist should override MDP nl-mode=full."""
+        e_pairlist = self._step0_metatomic(dd4_pairlist_run)
+        e_override = self._step0_metatomic(dd4_envvar_override_run)
+        assert e_override == pytest.approx(e_pairlist, abs=0.01), (
+            f"Env override energy {e_override:.6f} != pairlist {e_pairlist:.6f}"
+        )
+
+
+class TestNLModeConservation:
+    """Energy conservation for both NL modes."""
+
+    def test_dd4_full_drift(self, dd4_full_run):
+        assert dd4_full_run.returncode == 0
+        drift = dd4_full_run.mdlog.energy_drift
+        assert drift is not None, "No energy drift reported"
+        assert abs(drift) < 5.0, (
+            f"DD4 full-mode drift {drift:.3f} kJ/mol/ps/atom too large"
+        )
+
+    def test_dd4_pairlist_drift(self, dd4_pairlist_run):
+        assert dd4_pairlist_run.returncode == 0
+        drift = dd4_pairlist_run.mdlog.energy_drift
+        assert drift is not None, "No energy drift reported"
+        assert abs(drift) < 5.0, (
+            f"DD4 pairlist-mode drift {drift:.3f} kJ/mol/ps/atom too large"
+        )

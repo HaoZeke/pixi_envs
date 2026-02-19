@@ -176,9 +176,30 @@ class DebugEntry:
 
 
 def parse_debug_log(path: str | Path) -> list[DebugEntry]:
-    """Parse a metatomic_debug_rank_N.log file."""
+    """Parse a metatomic_debug_rank_N.log file.
+
+    Supports both old format (pairlistPairs=...) and new format (nlMode=..., nlPairs=...).
+    """
     entries = []
     for line in Path(path).read_text().strip().split("\n"):
+        # New format: nlMode=full, nlPairs=250, numLocalMta=...
+        m = re.match(
+            r"nlMode=(\S+),\s*nlPairs=(\d+),\s*numLocalMta=(\d+),\s*numHomeMta=(\d+),\s*"
+            r"energy:\s*perRank=([^\s,]+),\s*mpiSum=([^\s]+)",
+            line,
+        )
+        if m:
+            entries.append(
+                DebugEntry(
+                    pairlist_pairs=int(m.group(2)),
+                    num_local_mta=int(m.group(3)),
+                    num_home_mta=int(m.group(4)),
+                    energy_per_rank=float(m.group(5)),
+                    energy_mpi_sum=float(m.group(6)),
+                )
+            )
+            continue
+        # Old format: pairlistPairs=181, numLocalMta=...
         m = re.match(
             r"pairlistPairs=(\d+),\s*numLocalMta=(\d+),\s*numHomeMta=(\d+),\s*"
             r"energy:\s*perRank=([^\s,]+),\s*mpiSum=([^\s]+)",
