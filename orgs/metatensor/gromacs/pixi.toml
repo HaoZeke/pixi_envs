@@ -99,7 +99,7 @@ metatomic-torch = ">=0.1.4, <0.2"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
 
 [feature.cuda.activation]
-env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_DEVICE = "CUDA", GMX_CUDA_ARCH = "80" }
+env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_DEVICE = "CUDA", GMX_CUDA_ARCH = "80", CUDAARCHS = "80" }
 
 [feature.cuda.pypi-dependencies]
 torch = ">=2.7.0, <2.8"
