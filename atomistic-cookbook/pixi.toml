@@ -57,7 +57,8 @@ metatomic = ">=0.1.0, <0.2"
 metatrain = ">=2025.11, <2026"
 torch = ">=2.7, <2.8"
 chemiscope = "*"
-rgpycrumbs = ">=0.0.3, <0.0.4"
+rgpycrumbs = ">=1.1.0, <2"
+chemparseplot = ">=1.1.0, <2"
 
 [feature.eon-pet-neb.tasks.register-kernel]
 # This one basically registers into jupyter.
