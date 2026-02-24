@@ -48,8 +48,7 @@ Configuration and benchmark code live in ~gromacs/asv.conf.json~ and
 | Class | Config | Measures |
 |-------+--------+----------|
 | ~TimeSerialMD~ | 1 rank | Baseline (no MPI) |
-| ~TimeDD4FullNL~ | 4 ranks, ~nl-mode=full~ | Ring pair exchange + sparse force scatter |
-| ~TimeDD4PairlistNL~ | 4 ranks, ~nl-mode=pairlist~ | Pairlist mode (no pair exchange) |
+| ~TimeDD4~ | 4 ranks | 4-rank DD scaling |
 
 Each class has ~time_*~ (wall-clock) and ~peakmem_*~ (peak RSS) methods.
 Input data: 125-atom LJ system from ~mta_test/~.
@@ -84,6 +83,53 @@ uvx --from "asv-spyglass @ git+https://github.com/HaoZeke/asv_spyglass.git@enh-m
 PRs to the GROMACS fork trigger two workflows:
 - ~ci_benchmark.yml~: builds base + PR, runs ASV on both, uploads results
 - ~ci_bench_commenter.yml~: posts comparison table as a PR comment (via ~asv-spyglass~)
+
+*** Water Scaling: GROMACS vs LAMMPS
+
+Benchmark comparing GROMACS metatomic (CPU IForceProvider) against LAMMPS pair_metatomic.
+Located in =mta_bench/water_scaling/=.
+
+**** Quick start
+
+#+begin_src bash
+# Prepare water boxes (needs gmx in PATH)
+cd mta_bench/water_scaling
+python prepare.py
+
+# Run GROMACS (500 steps, with profiling timer):
+cd gmx_cpu/216
+GMX_METATOMIC_TIMER=1 $GMX_BIN mdrun -s topol.tpr -ntomp 1 -ntmpi 1 \
+  -g md.log -pin off -nsteps 500
+
+# Run LAMMPS (500 steps, with profiling timer):
+cd ../../lmp/216
+LAMMPS_METATOMIC_PROFILE=1 lmp -in lmp.in 2>lmp_timer.log
+
+# Parse & plot (uses uv inline script deps):
+cd ../..
+python parse_timers_to_csv.py \
+  --gmx-timer results/gmx_timer_216_500.log \
+  --lmp-timer results/lmp_timer_216_500.log \
+  -o results/timer_data.csv
+uv run analyze_warmup.py \
+  --gmx-timer results/gmx_timer_216_500.log \
+  --lmp-timer results/lmp_timer_216_500.log \
+  -o results/warmup_analysis.png
+#+end_src
+
+**** Results (216 water, 648 atoms, PET-MAD v1.0.2, RTX 4070 Ti SUPER)
+
+| Metric                | GROMACS   | LAMMPS    |
+|-----------------------+-----------+-----------|
+| Steady-state (ms/step)| 55.0      | 79.8      |
+| Forward (ms)          | 18.8      | 37.3      |
+| Backward (ms)         | 33.1      | 33.8      |
+| Other (NL, transfer)  | 3.1       | 8.7       |
+| Warmup (steps 0-9)    | ~5500 ms  | ~5000 ms  |
+
+GROMACS is 1.45x faster at steady state because it passes only 648 atoms
+(no PBC ghosts) to the model, vs LAMMPS's 6727 atoms (648 + 6079 ghosts).
+Both codes filter NL pairs to ~24K by the model cutoff.
 
 ** CI
 The GROMACS fork at =gromacs/.github/workflows/metatomic-ci.yml= runs
