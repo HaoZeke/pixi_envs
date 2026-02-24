@@ -1,0 +1,46 @@
+; Run control
+; ===================================================================
+integrator              = md
+nsteps                  = 100
+dt                      = 0.001
+
+; Output control
+; ===================================================================
+nstxout                 = 1
+nstvout                 = 1
+nstfout                 = 1
+nstcalcenergy           = 1
+nstenergy               = 1
+
+; Neighbor searching
+; ===================================================================
+cutoff-scheme           = verlet
+rcoulomb                = 0.5
+rvdw                    = 0.5
+pbc                     = xyz
+
+; Electrostatics
+; ===================================================================
+coulombtype             = Cut-off
+
+; Van der Waals
+; ===================================================================
+vdw-type                = Cut-off
+vdw-modifier            = Potential-shift
+
+; Temperature Coupling
+; ===================================================================
+tcoupl                  = v-rescale
+tc_grps                 = system
+tau_t                   = .5
+ref_t                   = 94.4
+
+; Velocity generation
+; ===================================================================
+gen-vel                 = yes
+gen-seed                = 42
+
+; Metatomic
+; ===================================================================
+metatomic-active   = true
+metatomic-model    = ./model.pt
