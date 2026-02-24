@@ -41,8 +41,8 @@ device-agnostic; there are no CUDA-specific tests.
 
 ** Benchmarks
 We use [[https://asv.readthedocs.io/][ASV (Airspeed Velocity)]] to track DD scaling performance.
-Configuration and benchmark code live in ~gromacs/asv.conf.json~ and
-~gromacs/benchmarks/~, following the [[https://github.com/TheochemUI/eOn][eOn]] layout.
+Configuration and benchmark code live in ~asv.conf.json~ and ~benchmarks/~ (in
+the pixi_envs directory, not inside the gromacs submodule), following the [[https://github.com/TheochemUI/eOn][eOn]] layout.
 
 *** Suite
 | Class | Config | Measures |
@@ -61,28 +61,23 @@ pixi r -e metatomic-cpu gromk-tmpi Release
 # Install ASV
 pixi run -e metatomic-cpu pip install asv
 
-# Run from gromacs/ subdir
-cd gromacs
+# Run from pixi_envs/orgs/metatensor/gromacs/
 pixi run -e metatomic-cpu bash -c 'asv machine --yes'
 
-GMX_BIN=$(realpath ../.pixi/envs/metatomic-cpu/bin/gmx) \
+GMX_BIN=$(realpath .pixi/envs/metatomic-cpu/bin/gmx) \
   pixi run -e metatomic-cpu bash -c \
-  'asv run -E "existing:$(which python)" --set-commit-hash $(git rev-parse HEAD) --record-samples --quick'
+  'asv run -E "existing:$(which python)" --set-commit-hash $(git -C gromacs rev-parse HEAD) --record-samples --quick'
 #+end_src
 
 *** Comparing two commits
 #+begin_src bash
-MACHINE=$(ls .asv/results/ | grep -v benchmarks.json | head -1)
-uvx --from "asv-spyglass @ git+https://github.com/HaoZeke/asv_spyglass.git@enh-multiple-comparisons" \
-  asv-spyglass compare --label-before before --label-after after \
-  .asv/results/$MACHINE/<hash1>*.json \
-  .asv/results/$MACHINE/<hash2>*.json
+pixi run -e metatomic-cpu bash -c 'asv compare <hash1> <hash2>'
 #+end_src
 
 *** CI
 PRs to the GROMACS fork trigger two workflows:
 - ~ci_benchmark.yml~: builds base + PR, runs ASV on both, uploads results
-- ~ci_bench_commenter.yml~: posts comparison table as a PR comment (via ~asv-spyglass~)
+- ~ci_bench_commenter.yml~: posts comparison table as a PR comment (via [[https://github.com/HaoZeke/asv-perch][asv-perch]])
 
 *** Water Scaling: GROMACS vs LAMMPS
 

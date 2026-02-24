@@ -1,0 +1,22 @@
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+  1             2               no              1.0     1.0
+
+[ atomtypes ]
+Ar            18      12.0001   0.0000  A     0.33646    0.94191
+
+[ moleculetype ]
+; molname       nrexcl
+Ar              1
+
+[ atoms ]
+; id    at type res nr  residu name     at name  cg nr  charge 
+1       Ar      1      Ar             Ar       1      0
+
+[ system ]
+; Name
+Argon test system
+
+[ molecules ]
+; Compound        #mols
+Ar                 125
