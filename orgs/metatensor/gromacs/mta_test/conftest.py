@@ -15,6 +15,7 @@ import pytest
 def pytest_configure(config):
     config.addinivalue_line("markers", "dd8: tests requiring 8 MPI ranks")
     config.addinivalue_line("markers", "dd12: tests requiring 12 MPI ranks")
+    config.addinivalue_line("markers", "gpu: tests requiring CUDA GPU")
 
 
 
@@ -249,6 +250,7 @@ def run_mdrun(
     nranks: int = 1,
     nsteps: int = 100,
     extra_mdp: dict | None = None,
+    extra_env: dict | None = None,
     workdir: Path | None = None,
     timer: bool = False,
 ) -> MDRunResult:
@@ -256,6 +258,10 @@ def run_mdrun(
 
     Copies the test inputs into a temp directory, runs grompp + mdrun,
     and returns parsed results.
+
+    Args:
+        extra_env: Additional environment variables for mdrun (e.g.
+            {"GMX_METATOMIC_DEVICE": "cuda"} for GPU path).
     """
     if workdir is None:
         workdir = Path(tempfile.mkdtemp(prefix="mta_test_"))
@@ -290,6 +296,8 @@ def run_mdrun(
     env = os.environ.copy()
     if timer:
         env["GMX_METATOMIC_TIMER"] = "1"
+    if extra_env:
+        env.update(extra_env)
 
     if nranks > 1:
         if os.environ.get("GMX_THREAD_MPI", "") or not gmx.endswith("_mpi"):

@@ -384,3 +384,57 @@ class TestDD4Conservation:
         assert abs(drift) < 5.0, (
             f"DD4 drift {drift:.3f} kJ/mol/ps/atom too large"
         )
+
+
+# ---------------------------------------------------------------------------
+# GPU vs CPU energy parity (single-rank)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.gpu
+class TestGPUCPUParity:
+    """GPU and CPU paths must produce the same step-0 energy (single-rank).
+
+    The GPU path uses float32 coordinates while the CPU path uses float64,
+    so we allow ~1 kJ/mol tolerance for precision differences.
+
+    Requires: CUDA build, GMX_METATOMIC_DEVICE=cuda.
+    """
+
+    @pytest.fixture(scope="class")
+    def gpu_serial_run(self):
+        """Run single-rank with GPU path."""
+        result = run_mdrun(
+            nranks=1,
+            nsteps=0,
+            extra_env={"GMX_METATOMIC_DEVICE": "cuda"},
+        )
+        yield result
+        shutil.rmtree(result.workdir, ignore_errors=True)
+
+    @pytest.fixture(scope="class")
+    def cpu_serial_run(self):
+        """Run single-rank with CPU path."""
+        result = run_mdrun(nranks=1, nsteps=0)
+        yield result
+        shutil.rmtree(result.workdir, ignore_errors=True)
+
+    def _step0_metatomic(self, result: MDRunResult) -> float:
+        assert result.returncode == 0, f"mdrun failed:\n{result.stderr}"
+        assert len(result.mdlog.frames) >= 1, "No energy frames found"
+        f = result.mdlog.frames[0]
+        assert f.step == 0
+        return f.metatomic
+
+    def test_gpu_runs_successfully(self, gpu_serial_run):
+        assert gpu_serial_run.returncode == 0, (
+            f"GPU mdrun failed:\n{gpu_serial_run.stderr}"
+        )
+
+    def test_gpu_cpu_energy_match(self, cpu_serial_run, gpu_serial_run):
+        e_cpu = self._step0_metatomic(cpu_serial_run)
+        e_gpu = self._step0_metatomic(gpu_serial_run)
+        assert e_gpu == pytest.approx(e_cpu, abs=1.0), (
+            f"GPU energy {e_gpu:.6f} != CPU energy {e_cpu:.6f} "
+            f"(diff={abs(e_gpu - e_cpu):.6f} kJ/mol)"
+        )
