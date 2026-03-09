@@ -1,0 +1,6 @@
+vesin
+CLAUDE.md
+.claude/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
