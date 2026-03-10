@@ -30,6 +30,8 @@ test-vesin-torch = { cwd = "vesin", cmd = "pytest python/vesin_torch/tests/test_
 bench-prepare = { cwd = "vesin_bench", cmd = "python prepare.py" }
 bench-run = { cwd = "vesin_bench", cmd = "python bench_nl.py", depends-on = ["install-python", "bench-prepare"] }
 bench-plot = { cwd = "vesin_bench", cmd = "python plot.py" }
+bench-torch = { cwd = "vesin_bench", cmd = "python bench_torch.py", depends-on = ["install-vesin-torch"] }
+bench-nvalchemi = { cwd = "vesin_bench", cmd = "python bench_nvalchemi.py", depends-on = ["install-vesin-torch"] }
 
 [feature.cuda.dependencies]
 cuda-toolkit = ">=13.1.0,<14"
