@@ -12,6 +12,8 @@ cxx-compiler = ">=1.9,<2"
 pytest = ">=9.0,<10"
 uv = ">=0.7,<1"
 pip = ">=25.2,<26"
+matplotlib = ">=3.9,<4"
+numpy = ">=2.0,<3"
 
 [tasks]
 configure = { cwd = "vesin", cmd = "cmake -B build -G Ninja -DVESIN_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release" }
@@ -21,6 +23,9 @@ test-c = { cwd = "vesin", cmd = "build/vesin/tests/neighbors && build/vesin/test
 install-python = { cwd = "vesin/python/vesin", cmd = "pip install --no-build-isolation -e .", depends-on = ["build-shared"] }
 test-python = { cwd = "vesin", cmd = "pytest python/vesin/tests/ -v", depends-on = ["install-python"] }
 test-verlet = { cwd = "vesin", cmd = "pytest python/vesin/tests/test_verlet.py -v", depends-on = ["install-python"] }
+bench-prepare = { cwd = "vesin_bench", cmd = "python prepare.py" }
+bench-run = { cwd = "vesin_bench", cmd = "python bench_nl.py", depends-on = ["install-python", "bench-prepare"] }
+bench-plot = { cwd = "vesin_bench", cmd = "python plot.py" }
 
 [feature.cuda.dependencies]
 cuda-toolkit = ">=13.1.0,<14"
@@ -30,7 +35,10 @@ cuda-version = ">=13.0,<14"
 cuda-nvcc = ">=13.1.80,<14"
 cuda-cudart-dev = ">=13.1.80,<14"
 cuda-driver-dev = ">=13.1.80,<14"
-pytorch = ">=2.9.1,<3"
+pytorch = { version = ">=2.9.1,<3", build = "cuda*" }
+
+[feature.cuda.system-requirements]
+cuda = "13.0"
 
 [feature.cuda.tasks]
 test-cuda = { cwd = "vesin", cmd = "ctest --test-dir build -R cuda -V", depends-on = ["build"] }
