@@ -23,6 +23,10 @@ test-c = { cwd = "vesin", cmd = "build/vesin/tests/neighbors && build/vesin/test
 install-python = { cwd = "vesin/python/vesin", cmd = "pip install --no-build-isolation -e .", depends-on = ["build-shared"] }
 test-python = { cwd = "vesin", cmd = "pytest python/vesin/tests/ -v", depends-on = ["install-python"] }
 test-verlet = { cwd = "vesin", cmd = "pytest python/vesin/tests/test_verlet.py -v", depends-on = ["install-python"] }
+configure-torch = { cwd = "vesin", cmd = "cmake -B build-torch -G Ninja -DVESIN_TORCH=ON -DCMAKE_BUILD_TYPE=Release" }
+build-torch = { cwd = "vesin", cmd = "cmake --build build-torch", depends-on = ["configure-torch"] }
+install-vesin-torch = { cwd = "vesin/python/vesin_torch", cmd = "pip install --no-build-isolation .", depends-on = ["build-torch"] }
+test-vesin-torch = { cwd = "vesin", cmd = "pytest python/vesin_torch/tests/test_neighbors.py python/vesin_torch/tests/test_autograd.py python/vesin_torch/tests/test_verlet.py -v", depends-on = ["install-vesin-torch"] }
 bench-prepare = { cwd = "vesin_bench", cmd = "python prepare.py" }
 bench-run = { cwd = "vesin_bench", cmd = "python bench_nl.py", depends-on = ["install-python", "bench-prepare"] }
 bench-plot = { cwd = "vesin_bench", cmd = "python plot.py" }
