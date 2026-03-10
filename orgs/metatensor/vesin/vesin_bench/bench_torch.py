@@ -1,8 +1,9 @@
-"""Benchmark vesin-torch: GPU stateless vs CPU stateless vs CPU Verlet.
+"""Benchmark vesin-torch: CPU/GPU stateless vs CPU/GPU Verlet.
 
 Measures wall-clock times for MD-like trajectories (small perturbations
-per step) across all three modes to show where Verlet caching wins and
-where GPU acceleration wins.
+per step) across four modes: CPU stateless, CPU Verlet, GPU stateless,
+GPU Verlet. Shows where Verlet caching wins, where GPU acceleration wins,
+and whether GPU Verlet combines the best of both.
 """
 
 import json
@@ -65,24 +66,29 @@ def bench_stateless(points, box, cutoff, n_steps, warmup=3):
 
 
 def bench_verlet(points, box, cutoff, skin, n_steps, warmup=3):
-    """Time Verlet neighbor list over n_steps (CPU only)."""
-    cpu_points = points.cpu()
-    cpu_box = box.cpu()
-    vl = VerletNeighborList(cutoff=cutoff, skin=skin, full_list=True, sorted=True)
-    current = cpu_points.clone()
+    """Time Verlet neighbor list over n_steps on the given device."""
+    # GPU Verlet does not support sorted output
+    use_sorted = not points.is_cuda
+    vl = VerletNeighborList(cutoff=cutoff, skin=skin, full_list=True, sorted=use_sorted)
+    current = points.clone()
 
     for _ in range(warmup):
-        vl.compute(current, cpu_box, periodic=True, quantities="ijSDd")
+        vl.compute(current, box, periodic=True, quantities="ijSDd")
         current = perturb(current)
 
-    current = cpu_points.clone()
+    if points.is_cuda:
+        torch.cuda.synchronize()
+
+    current = points.clone()
     rebuilds = 0
     t0 = time.perf_counter()
     for step in range(n_steps):
-        vl.compute(current, cpu_box, periodic=True, quantities="ijSDd")
+        vl.compute(current, box, periodic=True, quantities="ijSDd")
         if vl.did_rebuild:
             rebuilds += 1
         current = perturb(current)
+    if points.is_cuda:
+        torch.cuda.synchronize()
     elapsed = time.perf_counter() - t0
     return elapsed, rebuilds
 
@@ -104,9 +110,9 @@ def main():
     if has_cuda:
         configs.append((10, "4000"))
 
-    header = f"{'N':>6} {'CPU stat':>10} {'CPU Verlet':>10} {'VL speedup':>10} {'Rebuilds':>10}"
+    header = f"{'N':>6} {'CPU stat':>10} {'CPU VL':>10} {'VL spdup':>10} {'Rebuilds':>10}"
     if has_cuda:
-        header += f" {'GPU stat':>10} {'GPU vs VL':>10}"
+        header += f" {'GPU stat':>10} {'GPU VL':>10} {'GVL spdup':>10} {'GVL rb':>10}"
     print(header)
     print("-" * len(header))
 
@@ -134,10 +140,22 @@ def main():
         if has_cuda:
             points_gpu, box_gpu = make_fcc_system(n_cells, device="cuda")
             t_gpu = bench_stateless(points_gpu, box_gpu, cutoff, n_steps)
-            gpu_vs_vl = t_verlet / t_gpu if t_gpu > 0 else float("inf")
-            row += f" {t_gpu:>9.3f}s {gpu_vs_vl:>9.2f}x"
             entry["gpu_stateless_s"] = round(t_gpu, 4)
-            entry["gpu_vs_verlet"] = round(gpu_vs_vl, 2)
+
+            # GPU Verlet: pass CUDA tensors to VerletNeighborList
+            try:
+                t_gpu_vl, gpu_rebuilds = bench_verlet(
+                    points_gpu, box_gpu, cutoff, skin, n_steps
+                )
+                gvl_speedup = t_gpu / t_gpu_vl if t_gpu_vl > 0 else float("inf")
+                row += (f" {t_gpu:>9.3f}s {t_gpu_vl:>9.3f}s"
+                        f" {gvl_speedup:>9.2f}x {gpu_rebuilds:>5}/{n_steps}")
+                entry["gpu_verlet_s"] = round(t_gpu_vl, 4)
+                entry["gpu_verlet_speedup"] = round(gvl_speedup, 2)
+                entry["gpu_rebuilds"] = gpu_rebuilds
+            except Exception as e:
+                row += f" {t_gpu:>9.3f}s {'ERR':>10} {'--':>10} {'--':>10}"
+                entry["gpu_verlet_error"] = str(e)
 
         print(row)
         results[label] = entry

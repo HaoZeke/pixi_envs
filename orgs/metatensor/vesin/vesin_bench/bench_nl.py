@@ -52,7 +52,9 @@ HAS_VERLET = False
 if HAS_VESIN:
     try:
         from vesin._c_lib import _get_library
-        from vesin._c_api import VesinNeighborList, VesinOptions, VesinDevice, VesinCPU
+        from vesin._c_api import (
+            VesinNeighborList, VesinOptions, VesinDevice, VesinCPU, VesinCUDA,
+        )
         _lib = _get_library()
         _lib.vesin_verlet_new  # will AttributeError on upstream
         HAS_VERLET = True
