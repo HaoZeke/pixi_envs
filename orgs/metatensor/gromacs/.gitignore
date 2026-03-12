@@ -3,4 +3,4 @@ gromacs
 gromacs-metatomic-feedstock
 mta_test
 *cmake
-.work/
+.beads/
