@@ -506,3 +506,6 @@ orgs/metatensor/vesin/AGENTS.md
 wip/AGENTS.md
 conda/AGENTS.md
 python/rgpkgs/AGENTS.md
+beads/AGENTS.md
+beads/claude-plugin/skills/beads/resources/AGENTS.md
+beads/cmd/bd/AGENTS.md
