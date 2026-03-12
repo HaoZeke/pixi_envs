@@ -2,3 +2,4 @@ metatomic
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+.beads/

@@ -4,3 +4,7 @@ CLAUDE.md
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db

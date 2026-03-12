@@ -1,2 +1,6 @@
 metatrain
 base_upet
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db
