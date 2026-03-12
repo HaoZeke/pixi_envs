@@ -22,7 +22,7 @@ The ~rgpkgs~ suite consists of three tightly integrated packages:
 | ~chemparseplot~ | Parsers and plotting for computational chemistry | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]] |
 | ~pychum~ | Input file generators for computational chemistry | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]] |
 
-See [[file:AGENTS.md][AGENTS.md]] for detailed ecosystem documentation and agent instructions.
+See the parent pixi_envs repository for development environment documentation.
 
 * Quick Start
 ** Prerequisites
@@ -195,7 +195,7 @@ bd create "Issue title" --description="Details" -t bug|feature|task -p 0-4
 bd sync
 #+END_SRC
 
-See [[file:../../AGENTS.md][../../AGENTS.md]] for full beads workflow.
+Beads issue tracking is configured at the pixi_envs level.
 
 * Development Guidelines
 ** Tool Choice: uv vs pixi
@@ -272,7 +272,7 @@ pixi run -e docs docbld
 #+END_SRC
 
 * Related Documentation
-- [[file:AGENTS.md][AGENTS.md]] - Comprehensive agent instructions
+
 - [[file:../../readme.org][../../readme.org]] - pixi_envs main documentation
 - [[file:../..][pixi_envs root]] - Other out-of-tree environments
 
