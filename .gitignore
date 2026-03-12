@@ -8,6 +8,10 @@ mutagen.yml
 **/.entire/
 **/.claude/
 **/CLAUDE.md
+**/QWEN.md
+**/AGENTS.md
+.dolt/
+*.db
 
 ### Large model artifacts and work directories (keep in private repo)
 **/base_upet/
@@ -498,14 +502,3 @@ dist
 vite.config.js.timestamp-*
 .vite/
 \#*.*\#
-
-
-**/QWEN.md
-orgs/metatensor/metatrain/AGENTS.md
-orgs/metatensor/vesin/AGENTS.md
-wip/AGENTS.md
-conda/AGENTS.md
-python/rgpkgs/AGENTS.md
-beads/AGENTS.md
-beads/claude-plugin/skills/beads/resources/AGENTS.md
-beads/cmd/bd/AGENTS.md
