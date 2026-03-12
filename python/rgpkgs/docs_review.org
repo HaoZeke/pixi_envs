@@ -1,0 +1,223 @@
+#+TITLE: rgpkgs Documentation Review (Diátaxis + One Good Tutorial)
+#+AUTHOR: Rohit Goswami
+#+DATE: 2026-03-12
+#+DESCRIPTION: Comprehensive documentation review of rgpycrumbs, chemparseplot, and pychum using Diátaxis framework and One Good Tutorial checklist
+
+* Overview
+This document provides a systematic review of the documentation for the three
+rgpkgs packages using two complementary frameworks:
+1. [[https://diataxis.fr/][Diátaxis]]: Four documentation types (Tutorials, How-to Guides, Reference, Explanation)
+2. [[https://onegoodtutorial.org/][One Good Tutorial]]: Nine essential items for project documentation
+
+* Summary Ratings
+
+| Package | One Good Tutorial | Diátaxis Coverage | Overall |
+|---------+-------------------+-------------------+---------|
+| rgpycrumbs | 9/9 ✓ | Strong | Excellent |
+| chemparseplot | 8/9 ~ | Moderate | Good |
+| pychum | 6/9 ~ | Weak | Needs Work |
+
+* rgpycrumbs Documentation Review
+** One Good Tutorial Checklist
+
+| Item | Status | Location | Notes |
+|------+------+----------+-------|
+| 1. Synopsis | ✓ | README.md, index.org | Clear 2-paragraph description with badges |
+| 2. Tutorial | ✓ | quickstart.org | Comprehensive with installation modes, examples |
+| 3. Contact Info | ✓ | README.md | GitHub issues, eOn materials science forum |
+| 4. Install Instructions | ✓ | README.md, quickstart.org | Three modes: core, pip extras, full stack |
+| 5. Citation Instructions | ✓ | README.md | Zenodo DOI, wailord paper for ORCA |
+| 6. Contribution Statement | ✓ | CONTRIBUTING.md | Code of Conduct, dev environment, guidelines |
+| 7. Reference Material | ✓ | Sphinx AutoAPI | autoapi/ generated, CLI reference |
+| 8. Licensing Statement | ✓ | README.md, LICENSE | MIT license clearly stated |
+| 9. Acknowledgments | ✓ | README.md | University of Iceland, Icelandic Research Fund |
+
+**Diátaxis Analysis
+
+*** Tutorials (Learning-oriented) ✓
+- ~quickstart.org~: Excellent hands-on introduction
+  - Three installation modes with clear examples
+  - Surface fitting with working code
+  - Spline interpolation example
+  - Data types usage
+  - CLI dispatcher walkthrough
+- ~tools/chemgp/batch_tutorial.org~: Batch figure generation
+- *Strength*: Progressive complexity, copy-paste runnable examples
+- *Gap*: Could use a "first project" end-to-end tutorial
+
+*** How-to Guides (Goal-oriented) ✓
+- ~tools/eon/plt_neb.org~: Plotting NEB paths
+- ~tools/eon/con_splitter.org~: Splitting trajectory files
+- ~tools/orca/generate_orca_input.org~: ORCA input generation
+- ~tools/geom/detect_fragments.org~: Fragment detection
+- ~tools/chemgp/plt_gp.org~: ChemGP plotting
+- *Strength*: Problem-solution format, clear commands
+- *Gap*: Could use troubleshooting sections
+
+*** Reference (Information-oriented) ✓
+- ~autoapi/~: Complete API documentation (Sphinx AutoAPI)
+- ~contributing/test_requirements.org~: Testing requirements
+- ~contributing/release.org~: Release process
+- ~contributing/doc_builds.org~: Documentation workflow
+- ~changelog.org~: Version history (towncrier)
+- *Strength*: Comprehensive API docs, clear release process
+- *Gap*: Could use a CLI command reference page
+
+*** Explanation (Understanding-oriented) ✓
+- ~devnotes.org~: Architecture and design decisions
+  - Dispatcher pattern explained
+  - Dependency management rationale
+  - Dynamic dependency resolution (5-step chain)
+  - CUDA-aware resolution
+- ~used_by.org~: Ecosystem context
+- *Strength*: Clear "why" behind architectural choices
+- *Gap*: Could expand on kernel method theory (TPS, Matern, etc.)
+
+**Recommendations for rgpycrumbs
+1. Add "First Project" tutorial: End-to-end workflow from data to publication
+2. Add troubleshooting sections to how-to guides
+3. Create dedicated CLI command reference page
+4. Expand explanation of kernel methods with math/diagrams
+5. Add video screencast tutorials (optional)
+
+* chemparseplot Documentation Review
+** One Good Tutorial Checklist
+
+| Item | Status | Location | Notes |
+|------+------+----------+-------|
+| 1. Synopsis | ✓ | readme.md | Clear description, badges |
+| 2. Tutorial | ~ | tutorials/ | Exists but limited (2 subdirs) |
+| 3. Contact Info | ✓ | readme.md | GitHub issues |
+| 4. Install Instructions | ✓ | readme.md | Three modes with pip/uv |
+| 5. Citation Instructions | ✓ | readme.md | Zenodo DOI |
+| 6. Contribution Statement | ✓ | CONTRIBUTING.md | Links to contributing guide |
+| 7. Reference Material | ~ | apidocs/ | Exists, needs review |
+| 8. Licensing Statement | ✓ | readme.md | MIT license |
+| 9. Acknowledgments | ✓ | readme.md | Mentions rgpycrumbs, funding |
+
+**Diátaxis Analysis
+
+*** Tutorials (Learning-oriented) ~
+- ~tutorials/chemgp/index.md~: ChemGP tutorials (convergence, surfaces)
+- ~tutorials/orca/geomscan.md~: ORCA geometry scan
+- *Strength*: Focused on common workflows
+- *Gap*: Limited scope, could use more examples
+- *Gap*: No "getting started" narrative tutorial
+
+*** How-to Guides (Goal-oriented) ~
+- ~features.md~: Feature overview (not quite how-to)
+- ~quickstart.md~: Quick start (more tutorial than how-to)
+- *Gap*: Missing how-to guides for specific tasks
+- *Gap*: No troubleshooting guides
+
+*** Reference (Information-oriented) ~
+- ~apidocs/~: API documentation exists
+- ~installations.md~: Installation reference
+- *Gap*: API docs completeness unknown (needs review)
+- *Gap*: No CLI reference
+
+*** Explanation (Understanding-oriented) ~
+- ~used_by.md~: Usage examples
+- *Gap*: Limited explanation of design decisions
+- *Gap*: No architecture documentation
+- *Gap*: Relationship with rgpycrumbs could be clearer
+
+**Recommendations for chemparseplot
+1. Expand tutorial section with more workflows
+2. Add how-to guides for common parsing/plotting tasks
+3. Create troubleshooting section
+4. Add architecture/design explanation
+5. Clarify rgpycrumbs dependency relationship
+6. Add CLI reference if applicable
+
+* pychum Documentation Review
+** One Good Tutorial Checklist
+
+| Item | Status | Location | Notes |
+|------+------+----------+-------|
+| 1. Synopsis | ✓ | readme.md | Clear description |
+| 2. Tutorial | ✗ | - | No tutorial found |
+| 3. Contact Info | ~ | - | GitHub implied, not explicit |
+| 4. Install Instructions | ~ | readme_src.org | In source org, not rendered |
+| 5. Citation Instructions | ~ | readme_src.org | Zenodo mentioned |
+| 6. Contribution Statement | ✗ | - | No CONTRIBUTING.md |
+| 7. Reference Material | ✗ | - | No API docs found |
+| 8. Licensing Statement | ✓ | readme_src.org | MIT license |
+| 9. Acknowledgments | ~ | readme_src.org | wailord paper mentioned |
+
+**Diátaxis Analysis
+
+*** Tutorials (Learning-oriented) ✗
+- *Gap*: No tutorial found
+- *Gap*: No getting started guide
+- *Gap*: No example workflows
+
+*** How-to Guides (Goal-oriented) ✗
+- ~readme.md~: Usage section (brief CLI example)
+- ~readme_src.org~: Development section
+- *Gap*: No how-to guides for generating inputs
+- *Gap*: No TOML configuration examples
+
+*** Reference (Information-oriented) ✗
+- *Gap*: No API documentation
+- *Gap*: No CLI reference
+- *Gap*: No TOML schema reference
+
+*** Explanation (Understanding-oriented) ~
+- ~readme_src.org~: Rationale section (why pychum exists)
+- ~readme_src.org~: Ecosystem overview
+- *Strength*: Clear problem statement (ORCA parser friction)
+- *Gap*: No architecture documentation
+
+**Recommendations for pychum
+1. **Critical**: Add tutorial for first input file generation
+2. **Critical**: Add how-to guides for ORCA/EON input generation
+3. **Critical**: Add API documentation (Sphinx AutoAPI)
+4. **Critical**: Add CONTRIBUTING.md
+5. Add CLI reference
+6. Add TOML configuration schema reference
+7. Add troubleshooting section
+8. Expand contact info in README
+
+* Cross-Package Recommendations
+** Structural Improvements
+1. Standardize documentation structure across all three packages
+2. Create unified "Ecosystem Tutorial" showing how packages work together
+3. Add cross-references between package docs
+4. Create shared troubleshooting guide
+
+** Content Improvements
+1. Add video screencasts for common workflows
+2. Create example galleries with before/after plots
+3. Add benchmark/comparison data
+4. Create FAQ sections
+
+** Technical Improvements
+1. Ensure all packages have working doc build pipelines
+2. Add documentation CI checks
+3. Create documentation style guide
+4. Add intersphinx links between packages
+
+* Priority Actions
+
+| Priority | Package | Action | Effort |
+|----------+---------+--------+--------|
+| 1 | pychum | Add tutorial + how-to guides | High |
+| 2 | pychum | Add API documentation | Medium |
+| 3 | pychum | Add CONTRIBUTING.md | Low |
+| 4 | chemparseplot | Expand tutorials | Medium |
+| 5 | chemparseplot | Add how-to guides | Medium |
+| 6 | chemparseplot | Add architecture docs | Low |
+| 7 | rgpycrumbs | Add "First Project" tutorial | Medium |
+| 8 | rgpycrumbs | Add troubleshooting sections | Low |
+| 9 | all | Create ecosystem tutorial | Medium |
+| 10 | all | Add intersphinx linking | Low |
+
+* Conclusion
+The rgpkgs documentation quality varies significantly across packages:
+- **rgpycrumbs**: Excellent documentation, minor improvements needed
+- **chemparseplot**: Good foundation, needs expansion
+- **pychum**: Needs significant work to meet standards
+
+All packages benefit from the clear ecosystem relationship documentation,
+but pychum particularly needs attention to meet the One Good Tutorial standard.

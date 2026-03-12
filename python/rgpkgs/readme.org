@@ -1,0 +1,280 @@
+#+TITLE: rgpkgs Out-of-Tree Development Environments
+#+AUTHOR: Rohit Goswami
+#+OPTIONS: toc:nil todo:nil num:nil author:nil title:nil
+
+* About
+This directory provides [[https://pixi.sh][pixi]] development environments for the ~rgpkgs~ ecosystem -
+a suite of interlinked Python packages for computational chemistry.
+
+The **out-of-tree** approach keeps environment configurations separate from the
+actual source repositories, enabling:
+- Multiple Python/version combinations without polluting project repos
+- Clean separation of concerns (env config vs source code)
+- Easy remote synchronization via mutagen
+- Feature-based modular environment definitions
+
+* Ecosystem Overview
+The ~rgpkgs~ suite consists of three tightly integrated packages:
+
+| Package | Role | Repository |
+|---------+------+------------|
+| ~rgpycrumbs~ | Core computational library + CLI dispatcher | [[https://github.com/HaoZeke/rgpycrumbs][HaoZeke/rgpycrumbs]] |
+| ~chemparseplot~ | Parsers and plotting for computational chemistry | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]] |
+| ~pychum~ | Input file generators for computational chemistry | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]] |
+
+See [[file:AGENTS.md][AGENTS.md]] for detailed ecosystem documentation and agent instructions.
+
+* Quick Start
+** Prerequisites
+- [[https://pixi.sh][pixi]] for environment management
+- [[https://docs.astral.sh/uv/][uv]] for standard development (faster, PyPI-only)
+- [[https://github.com/steveyegge/beads][beads]] (~bd~ CLI) for issue tracking (managed at pixi_envs level)
+
+** Setup Workflow
+#+BEGIN_SRC bash
+# Navigate to the rgpkgs directory
+cd /path/to/pixi_envs/python/rgpkgs/
+
+# Clone the package repositories
+git clone https://github.com/HaoZeke/rgpycrumbs.git
+git clone https://github.com/HaoZeke/chemparseplot.git
+git clone https://github.com/HaoZeke/pychum.git
+
+# Enter a package directory
+cd rgpycrumbs
+
+# Standard development with uv (recommended for most work)
+uv sync --extra test
+uv run pytest -m pure
+
+# Or use pixi for conda-only dependencies
+pixi install  # Installs all features including conda packages
+#+END_SRC
+
+* Package-Specific Workflows
+** rgpycrumbs
+*** Environments
+| Environment | Purpose | Key Dependencies |
+|-------------+---------+------------------|
+| ~test~ | Pure testing | pytest, numpy, scipy |
+| ~surfaces~ | JAX surface fitting | jax, jaxlib |
+| ~fragments~ | Fragment analysis | tblite, ira, pyvista (conda) |
+| ~eonmlflow~ | eOn + MLflow | eon, mlflow |
+| ~ptm~ | OVito PTM | ovito (conda) |
+| ~bench~ | ASV benchmarking | asv, jax |
+| ~docs~ | Sphinx documentation | sphinx, sphinx-autoapi, emacs |
+
+*** Usage Examples
+#+BEGIN_SRC bash
+cd rgpycrumbs
+
+# Pure tests (no heavy dependencies)
+uv run pytest -m pure
+
+# Surface fitting tests (needs JAX)
+uv sync --extra surfaces
+uv run pytest -m surfaces
+
+# Fragment tests (needs conda packages)
+pixi run -e fragments pytest -m fragments
+
+# Build documentation
+pixi run -e docs docbld
+
+# Run benchmarks
+pixi run -e bench asv run --quick
+#+END_SRC
+
+*** Key Features
+- **CLI Dispatcher**: PEP 723 metadata for isolated script execution
+- **Dynamic Dependencies**: 5-step priority chain with CUDA-aware resolution
+- **Lazy Loading**: Heavy deps (JAX, SciPy, ASE) load on first use
+- **ASV Benchmarks**: Performance tracking with [[https://github.com/HaoZeke/asv-perch][asv-perch]] CI integration
+
+** chemparseplot
+*** Environments
+| Environment | Purpose | Key Dependencies |
+|-------------+---------+------------------|
+| ~default~ | Basic usage | rgpycrumbs, pint |
+| ~plot~ | Plotting features | matplotlib, cmcrameri |
+| ~docs~ | Documentation | sphinx, shibuya |
+
+*** Usage Examples
+#+BEGIN_SRC bash
+cd chemparseplot
+
+# Standard development
+uv sync --all-extras
+uv run pytest
+
+# Build documentation
+cd ../..  # From pixi_envs root
+pixi run -e chemparseplot-docs docbld
+#+END_SRC
+
+*** Key Features
+- **Pure-python parsing**: ORCA 5.x, eOn, Sella, ChemGP HDF5
+- **Unit-aware**: pint throughout
+- **Scientific colormaps**: Fabio Crameri's color maps
+- **Computation delegation**: Heavy lifting by rgpycrumbs
+
+** pychum
+*** Environments
+| Environment | Purpose | Key Dependencies |
+|-------------+---------+------------------|
+| ~default~ | Input generation | jinja2, pint |
+| ~docs~ | Documentation | sphinx, sphinx-click |
+
+*** Usage Examples
+#+BEGIN_SRC bash
+cd pychum
+
+# Standard development
+uv sync --extra test
+uv run pytest
+
+# Interactive development with Jupyter
+uv sync --all-extras
+uv run jupyter lab
+#+END_SRC
+
+*** Key Features
+- **Jobflow/Fireworks integration**: Workflow management
+- **ORCA input generation**: NEB, single point calculations
+- **EON input generation**: SocketNWChemPot compatibility
+- **TOML configuration**: Unified input format
+- **Jinja2 templates**: Modular ORCA block generation
+
+* Synchronization
+For remote development, we use [[https://mutagen.io][mutagen]] for real-time bi-directional syncing and
+[[../../.vault/][nimvault]] for encrypted configuration.
+
+** Mutagen Setup
+#+BEGIN_SRC bash
+# Decrypt vault files (contains mutagen config)
+cd /path/to/pixi_envs
+pixi run unseal
+
+# Start mutagen daemon
+mutagen project start
+
+# Monitor sync status
+mutagen sync monitor
+
+# Force sync before closing laptop
+mutagen project flush
+
+# Stop daemon
+mutagen project terminate
+#+END_SRC
+
+** Nimvault
+Sensitive files (mutagen config, SSH hosts) are GPG-encrypted in the vault.
+See [[../../readme.org][pixi_envs readme]] for vault usage.
+
+* Issue Tracking
+This project uses [[https://github.com/steveyegge/beads][beads]] for issue tracking at the pixi_envs level.
+
+#+BEGIN_SRC bash
+# Find available work
+bd ready
+
+# Show issue details
+bd show pixi_envs-<hash>
+
+# Claim work
+bd update <id> --claim
+
+# Complete work
+bd close <id> --reason "Completed"
+
+# Create new issue
+bd create "Issue title" --description="Details" -t bug|feature|task -p 0-4
+
+# Sync with git
+bd sync
+#+END_SRC
+
+See [[file:../../AGENTS.md][../../AGENTS.md]] for full beads workflow.
+
+* Development Guidelines
+** Tool Choice: uv vs pixi
+| Task | Tool | Reason |
+|------+------+--------|
+| Standard development | ~uv~ | Faster, PyPI-only packages |
+| Conda-only deps | ~pixi~ | tblite, ira, ovito not on PyPI |
+| Documentation | ~pixi~ | Needs emacs, pandoc, nodejs |
+| Testing | ~uv~ | Sufficient for most tests |
+| Full stack tests | ~pixi~ | When conda packages needed |
+
+** Branch Structure (rgpycrumbs)
+- ~main~: Development branch
+- ~readme~: Auto-generated orphan with rendered README.md (GitHub default)
+
+** Versioning
+Versions derived automatically from git tags via ~hatch-vcs~ (setuptools-scm):
+- Latest tag: ~v1.0.0~ → version ~1.0.0~
+- Between tags: ~1.0.1.dev3+gabcdef~
+
+** Release Process (rgpycrumbs)
+#+BEGIN_SRC bash
+# 1. Ensure tests pass
+uv run --extra test pytest -m pure
+
+# 2. Build changelog (towncrier fragments in docs/newsfragments/)
+uvx towncrier build --version "v1.0.0"
+
+# 3. Commit changelog
+git add CHANGELOG.rst && git commit -m "doc: release notes for v1.0.0"
+
+# 4. Tag release
+git tag -a v1.0.0 -m "Version 1.0.0"
+
+# 5. Build and publish
+uv build
+uvx twine upload dist/*
+#+END_SRC
+
+* Documentation Standards
+We follow two complementary frameworks:
+
+1. [[https://diataxis.fr/][Diátaxis]]: Four documentation types
+   - **Tutorials**: Learning-oriented, hands-on
+   - **How-to Guides**: Goal-oriented, problem-solving
+   - **Reference**: Information-oriented, technical specs
+   - **Explanation**: Understanding-oriented, deeper context
+
+2. [[https://onegoodtutorial.org/][One Good Tutorial]]: Nine essential items
+   - Synopsis (1-3 sentences)
+   - Tutorial (centerpiece)
+   - Contact info
+   - Install instructions
+   - Citation instructions
+   - Contribution statement
+   - Reference material (API docs)
+   - Licensing statement
+   - Acknowledgments
+
+** Documentation Workflow
+All documentation authored in ~orgmode~ and converted to ~reStructuredText~ for Sphinx:
+
+#+BEGIN_SRC bash
+cd rgpycrumbs/docs
+
+# Convert org to rst
+emacs --batch --load export.el
+
+# Build with sphinx
+sphinx-build source/ build/
+
+# Or use pixi task
+pixi run -e docs docbld
+#+END_SRC
+
+* Related Documentation
+- [[file:AGENTS.md][AGENTS.md]] - Comprehensive agent instructions
+- [[file:../../readme.org][../../readme.org]] - pixi_envs main documentation
+- [[file:../..][pixi_envs root]] - Other out-of-tree environments
+
+* License
+MIT. See individual package repositories for details.

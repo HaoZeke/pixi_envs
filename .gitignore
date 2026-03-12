@@ -498,3 +498,7 @@ dist
 vite.config.js.timestamp-*
 .vite/
 \#*.*\#
+
+### Beads issue tracking (not tracked in git)
+.beads/
+
