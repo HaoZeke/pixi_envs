@@ -503,3 +503,8 @@ vite.config.js.timestamp-*
 .beads/
 
 **/QWEN.md
+orgs/metatensor/metatrain/AGENTS.md
+orgs/metatensor/vesin/AGENTS.md
+wip/AGENTS.md
+conda/AGENTS.md
+python/rgpkgs/AGENTS.md
