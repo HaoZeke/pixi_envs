@@ -499,8 +499,6 @@ vite.config.js.timestamp-*
 .vite/
 \#*.*\#
 
-### Beads issue tracking (not tracked in git)
-.beads/
 
 **/QWEN.md
 orgs/metatensor/metatrain/AGENTS.md
