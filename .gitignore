@@ -502,3 +502,4 @@ vite.config.js.timestamp-*
 ### Beads issue tracking (not tracked in git)
 .beads/
 
+**/QWEN.md
