@@ -6,7 +6,7 @@ Completed comprehensive refactoring of rgpycrumbs, chemparseplot, and pychum rep
 
 ## Tasks Completed (7/7 - 100%)
 
-### 1. rgpycrumbs-ait: _aux.py Cleanup ✅
+### 1. rgpycrumbs-ait: _aux.py Cleanup DONE
 **Commit:** rgpycrumbs@4aa6972
 
 - Removed 77 lines of dead code (getstrform, get_gitroot, switchdir)
@@ -14,7 +14,7 @@ Completed comprehensive refactoring of rgpycrumbs, chemparseplot, and pychum rep
 - Kept dependency management infrastructure (ensure_import, _import_from_parent_env, lazy_import)
 - **Impact:** rgpycrumbs/_aux.py: 302 → 230 lines (-24%)
 
-### 2. rgpycrumbs-cmx: chemgp/plt_gp.py Refactoring ✅
+### 2. rgpycrumbs-cmx: chemgp/plt_gp.py Refactoring DONE
 **Commits:** rgpycrumbs@548a68f, c73f37e
 
 Split 936-line monolith into 4 focused modules:
@@ -23,13 +23,13 @@ Split 936-line monolith into 4 focused modules:
 - `chemgp/cli_plot_gp.py` (420 lines): CLI wrapper (PEP 723)
 - `chemgp/__init__.py` (50 lines): 17 exported functions with __all__
 
-### 3. rgpycrumbs-34m: eon/plt_neb.py Refactoring ✅
+### 3. rgpycrumbs-34m: eon/plt_neb.py Refactoring DONE
 **Commit:** rgpycrumbs@c73f37e
 
 - Created `eon/cli_plt_neb.py` (350 lines): Thin CLI wrapper (PEP 723)
 - Created `eon/__init__.py`: Minimal exports (delegates to chemparseplot)
 
-### 4. rgpycrumbs-chn: chemgp Tests ✅
+### 4. rgpycrumbs-chn: chemgp Tests DONE
 **Commit:** rgpycrumbs@c73f37e
 
 Created `tests/chemgp/test_chemgp_refactoring.py` (260 lines):
@@ -39,7 +39,7 @@ Created `tests/chemgp/test_chemgp_refactoring.py` (260 lines):
 - TestModuleImports: 3 tests
 - **Total: 14 tests**, all marked @pytest.mark.pure
 
-### 5. rgpycrumbs-6no: eon Tests ✅
+### 5. rgpycrumbs-6no: eon Tests DONE
 **Commit:** rgpycrumbs@5a9df5f
 
 Created `tests/eon/test_eon_cli.py` (104 lines):
@@ -48,13 +48,13 @@ Created `tests/eon/test_eon_cli.py` (104 lines):
 - TestLazyImports: 2 tests
 - **Total: 9 tests**, all marked @pytest.mark.pure
 
-### 6. rgpycrumbs-b4u: __all__ Exports ✅
+### 6. rgpycrumbs-b4u: __all__ Exports DONE
 **Commit:** rgpycrumbs@c73f37e
 
 - `chemgp/__init__.py`: 17 exported functions
 - `eon/__init__.py`: Minimal exports (CLI delegated to chemparseplot)
 
-### 7. rgpycrumbs-5fi: chemparseplot __all__ ✅
+### 7. rgpycrumbs-5fi: chemparseplot __all__ DONE
 **Commit:** chemparseplot@3497c2e, 28eac7a
 
 - Added `__all__` with parse, units
@@ -83,10 +83,10 @@ def read_h5_table(f, name="table"):
 ```
 
 **Benefits:**
-- ✅ Modules importable without optional deps
-- ✅ Auto-install triggered with RGPYCRUMBS_AUTO_DEPS=1
-- ✅ Tests use pytest.importorskip() for optional deps
-- ✅ No breaking changes to existing workflows
+- DONE Modules importable without optional deps
+- DONE Auto-install triggered with RGPYCRUMBS_AUTO_DEPS=1
+- DONE Tests use pytest.importorskip() for optional deps
+- DONE No breaking changes to existing workflows
 
 ## Test Coverage
 

@@ -1,4 +1,4 @@
-# rgpycrumbs Ecosystem Refactoring - COMPLETE ✓
+# rgpycrumbs Ecosystem Refactoring - COMPLETE [OK]
 
 **Date:** 2026-03-13  
 **Status:** 100% Complete  
@@ -15,7 +15,7 @@ Successfully completed comprehensive refactoring of the rgpycrumbs ecosystem (rg
 
 ## Tasks Completed (7/7 - 100%)
 
-### ✓ rgpycrumbs-ait: _aux.py Cleanup
+### [OK] rgpycrumbs-ait: _aux.py Cleanup
 **Commit:** `rgpycrumbs@4aa6972`
 
 - Removed 77 lines of dead code (getstrform, get_gitroot, switchdir)
@@ -23,7 +23,7 @@ Successfully completed comprehensive refactoring of the rgpycrumbs ecosystem (rg
 - Kept dependency management infrastructure
 - **Impact:** _aux.py: 302 → 230 lines (-24%)
 
-### ✓ rgpycrumbs-cmx: chemgp/plt_gp.py Refactoring
+### [OK] rgpycrumbs-cmx: chemgp/plt_gp.py Refactoring
 **Commits:** `rgpycrumbs@548a68f, c73f37e`
 
 Split 936-line monolith into 4 modules:
@@ -32,14 +32,14 @@ Split 936-line monolith into 4 modules:
 - `chemgp/cli_plot_gp.py` (420 lines): CLI wrapper (PEP 723)
 - `chemgp/__init__.py` (50 lines): 17 exported functions
 
-### ✓ rgpycrumbs-34m: eon/plt_neb.py Refactoring
+### [OK] rgpycrumbs-34m: eon/plt_neb.py Refactoring
 **Commits:** `rgpycrumbs@c73f37e, feb08ba`
 
 - Replaced 1151-line monolith with thin CLI wrapper (320 lines)
 - Delegates all parsing/plotting to chemparseplot
 - Uses lazy imports for optional dependencies
 
-### ✓ rgpycrumbs-chn: chemgp Tests
+### [OK] rgpycrumbs-chn: chemgp Tests
 **Commit:** `rgpycrumbs@c73f37e`
 
 Created `tests/chemgp/test_chemgp_refactoring.py` (260 lines):
@@ -49,7 +49,7 @@ Created `tests/chemgp/test_chemgp_refactoring.py` (260 lines):
 - TestModuleImports: 3 tests
 - **Total: 14 tests** (@pytest.mark.pure)
 
-### ✓ rgpycrumbs-6no: eon Tests
+### [OK] rgpycrumbs-6no: eon Tests
 **Commit:** `rgpycrumbs@5a9df5f`
 
 Created `tests/eon/test_eon_cli.py` (104 lines):
@@ -58,13 +58,13 @@ Created `tests/eon/test_eon_cli.py` (104 lines):
 - TestLazyImports: 2 tests
 - **Total: 9 tests** (@pytest.mark.pure)
 
-### ✓ rgpycrumbs-b4u: __all__ Exports
+### [OK] rgpycrumbs-b4u: __all__ Exports
 **Commit:** `rgpycrumbs@c73f37e`
 
 - chemgp/__init__.py: 17 exported functions
 - eon/__init__.py: Minimal exports (delegates to chemparseplot)
 
-### ✓ rgpycrumbs-5fi: chemparseplot __all__ + Cleanup
+### [OK] rgpycrumbs-5fi: chemparseplot __all__ + Cleanup
 **Commits:** `chemparseplot@3497c2e, 28eac7a`
 
 - Added __all__ with parse, units
@@ -93,10 +93,10 @@ def read_h5_table(f, name="table"):
 ```
 
 **Benefits:**
-- ✓ Modules importable without optional deps
-- ✓ Auto-install with RGPYCRUMBS_AUTO_DEPS=1
-- ✓ Tests use pytest.importorskip()
-- ✓ No breaking changes
+- [OK] Modules importable without optional deps
+- [OK] Auto-install with RGPYCRUMBS_AUTO_DEPS=1
+- [OK] Tests use pytest.importorskip()
+- [OK] No breaking changes
 
 ## Test Coverage
 
@@ -132,13 +132,13 @@ def read_h5_table(f, name="table"):
 ## Verification Results
 
 ```
-✓ chemgp: 17 functions exported
-✓ eon: plt_neb CLI wrapper available
-✓ _aux: dependency management utilities available
-✓ CLI has 12 command groups
-✓ chemgp tests: 1 file(s)
-✓ eon tests: 1 file(s)
-✓ Working tree clean
+[OK] chemgp: 17 functions exported
+[OK] eon: plt_neb CLI wrapper available
+[OK] _aux: dependency management utilities available
+[OK] CLI has 12 command groups
+[OK] chemgp tests: 1 file(s)
+[OK] eon tests: 1 file(s)
+[OK] Working tree clean
 ```
 
 ## Internal Documentation
@@ -168,5 +168,5 @@ def read_h5_table(f, name="table"):
 ---
 
 **Audited and Verified:** 2026-03-13  
-**All Changes Pushed:** ✓  
-**Ready for Production:** ✓
+**All Changes Pushed:** [OK]  
+**Ready for Production:** [OK]
