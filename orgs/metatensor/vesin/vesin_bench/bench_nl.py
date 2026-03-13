@@ -28,25 +28,18 @@ import numpy as np
 
 try:
     import sys
+    from pathlib import Path
     # Work around vesin/ directory shadowing the installed package
-    if 'vesin' in sys.modules and not hasattr(sys.modules['vesin'], 'NeighborList'):
+    cwd = Path.cwd()
+    # Remove ALL vesin-related paths from sys.path to avoid namespace shadowing
+    sys.path = [p for p in sys.path if 'vesin' not in str(p) or 'site-packages' in str(p)]
+    if 'vesin' in sys.modules:
         del sys.modules['vesin']
     import vesin
-    # Guard against the git repo dir "vesin/" shadowing the real package.
-    if not hasattr(vesin, "NeighborList"):
-        # Try to import from site-packages explicitly
-        import site
-        for path in site.getsitepackages():
-            if (Path(path) / "vesin").exists():
-                sys.path.insert(0, path)
-                import importlib
-                vesin = importlib.import_module('vesin')
-                break
     if not hasattr(vesin, "NeighborList"):
         raise ImportError(
             "Got vesin namespace package (no NeighborList). "
-            "Run from vesin_bench/ dir, not the workspace root."
-        )
+            "Install vesin properly or run from a different directory.")
     HAS_VESIN = True
 except ImportError as e:
     HAS_VESIN = False
