@@ -18,8 +18,8 @@ numpy = ">=2.0,<3"
 [tasks]
 configure = { cwd = "vesin", cmd = "cmake -B build -G Ninja -DVESIN_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release" }
 build = { cwd = "vesin", cmd = "cmake --build build", depends-on = ["configure"] }
-build-shared = { cwd = "vesin", cmd = "cmake -B build-shared -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release && cmake --build build-shared && mkdir -p python/vesin/vesin/lib && cp build-shared/vesin/libvesin.so python/vesin/vesin/lib/" }
-test-c = { cwd = "vesin", cmd = "build/vesin/tests/neighbors && build/vesin/tests/memory && build/vesin/tests/verlet", depends-on = ["build"] }
+build-shared = { cwd = "vesin", cmd = "cmake -B build-shared -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release && cmake --build build-shared && mkdir -p python/vesin/vesin/lib && cp build-shared/libvesin.so python/vesin/vesin/lib/" }
+test-c = { cwd = "vesin", cmd = "build/tests/neighbors && build/tests/memory && build/tests/verlet", depends-on = ["build"] }
 install-python = { cwd = "vesin/python/vesin", cmd = "pip install --no-build-isolation -e .", depends-on = ["build-shared"] }
 test-python = { cwd = "vesin", cmd = "pytest python/vesin/tests/ -v", depends-on = ["install-python"] }
 test-verlet = { cwd = "vesin", cmd = "pytest python/vesin/tests/test_verlet.py -v", depends-on = ["install-python"] }

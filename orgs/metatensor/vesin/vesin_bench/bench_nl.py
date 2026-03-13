@@ -31,8 +31,10 @@ try:
     from pathlib import Path
     # Work around vesin/ directory shadowing the installed package
     cwd = Path.cwd()
-    # Remove ALL vesin-related paths from sys.path to avoid namespace shadowing
-    sys.path = [p for p in sys.path if 'vesin' not in str(p) or 'site-packages' in str(p)]
+    # Keep paths that either don't contain 'vesin', or are in pixi environment
+    # The pixi environment contains '.pixi' in its path and includes the stdlib
+    sys.path = [p for p in sys.path
+                if 'vesin' not in str(p) or '.pixi' in str(p)]
     if 'vesin' in sys.modules:
         del sys.modules['vesin']
     import vesin
