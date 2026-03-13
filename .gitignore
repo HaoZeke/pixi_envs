@@ -502,3 +502,4 @@ dist
 vite.config.js.timestamp-*
 .vite/
 \#*.*\#
+python/rgpkgs/EMOJI_POLICY.md
