@@ -1,0 +1,294 @@
+#+title: Developer Notes
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+* Developer Notes
+
+Internal documentation for NEB Orchestrator developers.
+
+* Architecture Overview
+
+** Workflow Structure
+
+The workflow follows a modular design with separation of concerns:
+
+#+begin_src
+workflow/
+├── Snakefile              # Orchestration and rule imports
+├── rules/                 # Individual rule modules
+│   ├── get_model.smk      # Model retrieval
+│   ├── align_endpoints.smk # IRA alignment
+│   ├── minimize.smk       # Geometry optimization
+│   ├── generate_idpp.smk  # IDPP path (optional)
+│   ├── run_neb.smk        # NEB optimization
+│   └── visualize.smk      # Plotting
+├── envs/                  # Conda environments
+└── scripts/               # Helper scripts
+#+end_src
+
+** Design Principles
+
+1. *One Rule, One Responsibility*: Each rule does exactly one thing
+2. *Explicit Dependencies*: All inputs/outputs declared explicitly
+3. *Configurable Parameters*: No hardcoded values in rules
+4. *Reproducible Environments*: Conda per rule for isolation
+5. *Clear Documentation*: Every rule has comprehensive docstring
+
+* Rule Development
+
+** Adding a New Rule
+
+1. Create =workflow/rules/your_rule.smk=
+2. Define rule with clear docstring
+3. Specify inputs, outputs, params
+4. Add conda environment
+5. Test in isolation
+6. Update main Snakefile
+7. Document in reference
+
+** Rule Template
+
+#+begin_src snakemake
+# -*- mode: snakemake; -*-
+"""
+Brief description of rule purpose.
+
+Longer description with methodology, references, and context.
+
+References
+----------
+- Author, Title, Journal, Year, DOI
+"""
+
+rule rule_name:
+    """
+    Detailed rule documentation.
+
+    This rule performs [specific task] by [method].
+
+    Parameters
+    ----------
+    config['section']['param'] : type
+        Description with default value and units
+
+    Inputs
+    ------
+    input_name : type
+        Description of expected input
+
+    Outputs
+    -------
+    output_name : type
+        Description of produced output
+
+    Notes
+    -----
+    Any additional information, caveats, or implementation details.
+    """
+    input:
+        # Input files with wildcards
+    output:
+        # Output files with wildcards
+    params:
+        # Parameters from config with defaults
+    conda:
+        "envs/environment.yaml"
+    shadow: "minimal"  # or "copy" for isolated execution
+    run:
+        # Implementation
+#+end_src
+
+* Configuration Management
+
+** Config Schema
+
+The configuration follows a hierarchical structure:
+
+#+begin_src yaml
+systems:           # What to compute
+  system_name:
+    reactant: path
+    product: path
+
+model:             # Which ML potential
+  name: string
+  version: string
+
+compute:           # Hardware
+  device: cuda|cpu|mps
+
+alignment:         # IRA parameters
+  kmax: float
+
+neb:               # NEB calculation
+  minimization: {...}
+  optimization: {...}
+  idpp: {...}
+
+plotting:          # Visualization
+  {...}
+
+paths:             # Output locations
+  {...}
+#+end_src
+
+** Default Values
+
+All parameters have defaults in rules. Config overrides defaults:
+
+#+begin_src python
+# In rule run block
+params:
+    value=config.get('section', {}).get('param', default_value),
+#+end_src
+
+* Testing Strategy
+
+** Workflow Validation
+
+#+begin_src bash
+# Syntax check (basic)
+python -m py_compile workflow/Snakefile
+
+# Dry run (validates DAG)
+snakemake -n --configfile config/config.yaml
+
+# Rulegraph (visualize dependencies)
+snakemake --rulegraph | dot -Tpng > graph.png
+#+end_src
+
+** Integration Testing
+
+Test complete workflow on example system:
+
+#+begin_src bash
+cd examples/hcn_isom
+snakemake --configfile config.yaml -c2 --use-conda
+#+end_src
+
+** Regression Testing
+
+Maintain expected outputs for comparison:
+
+#+begin_src bash
+# Save baseline results
+cp -r results/ tests/baseline/
+
+# Compare after changes
+diff -r results/ tests/baseline/
+#+end_src
+
+* Debugging
+
+** Common Issues
+
+*** Rule Does Not Execute
+
+*Check*:
+- Wildcards match between input/output
+- Config values are correct
+- No circular dependencies
+
+*** Conda Environment Fails
+
+*Check*:
+- YAML syntax valid
+- Package names correct
+- Channel priorities
+
+*** NEB Does Not Converge
+
+*Check*:
+- Endpoints properly minimized
+- Sufficient number of images
+- Force convergence threshold appropriate
+- Spring constants reasonable
+
+** Logging
+
+Enable verbose logging:
+
+#+begin_src bash
+snakemake --verbose --configfile config.yaml
+#+end_src
+
+* Performance Optimization
+
+** Parallelization
+
+#+begin_src bash
+# Use multiple cores
+snakemake -c8 --configfile config.yaml
+
+# Cluster execution (example)
+snakemake --cluster "sbatch -c {threads}" -j100
+#+end_src
+
+** Caching
+
+Snakemake automatically caches completed jobs. To force re-run:
+
+#+begin_src bash
+snakemake --forcerun rule_name
+#+end_src
+
+** Resource Management
+
+Specify resources per rule:
+
+#+begin_src snakemake
+rule heavy_computation:
+    resources:
+        mem_mb=4096,
+        time=3600
+#+end_src
+
+* Documentation Build
+
+** Local Build
+
+#+begin_src bash
+cd docs/source
+pip install sphinx shibuya
+sphinx-build -b html . _build/html
+xdg-open _build/html/index.html
+#+end_src
+
+** Orgmode to RST
+
+#+begin_src bash
+# Using emacs batch export
+emacs --batch --load export.el -f neb-export-all
+#+end_src
+
+* Release Process
+
+** Version Numbering
+
+Follow Semantic Versioning (MAJOR.MINOR.PATCH):
+
+- MAJOR: Breaking changes
+- MINOR: New features (backward compatible)
+- PATCH: Bug fixes (backward compatible)
+
+** Release Checklist
+
+1. Update version in documentation
+2. Update changelog
+3. Tag release on GitHub
+4. Build and deploy documentation
+5. Announce release
+
+* Contributing
+
+See [[file:contributing/index.org][Contributing Guide]] for:
+- Code style guidelines
+- Pull request process
+- Testing requirements
+- Documentation standards
+
+* Contact
+
+- GitHub Issues: https://github.com/epfl/eon_orchestrator/issues
+- Email: dev@eon-orchestrator.rgoswami.me

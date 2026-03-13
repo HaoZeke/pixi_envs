@@ -1,0 +1,7 @@
+# HNC product structure for NEB isomerization
+# Units: Angstrom
+# Format: eOn .con file
+3
+H   0.000000   0.000000   0.000000
+N   0.000000   0.000000   1.035000
+C   0.000000   0.000000   2.190000

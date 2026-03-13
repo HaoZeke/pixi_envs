@@ -1,0 +1,46 @@
+#+title: Reference Documentation
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Reference Documentation
+
+Technical reference for NEB Orchestrator workflow components.
+
+** Available References
+
+#+BEGIN_EXPORT rst
+.. toctree::
+   :maxdepth: 2
+
+   rules
+   configuration
+   environments
+   outputs
+#+END_EXPORT
+
+* What is Reference Documentation?
+
+Reference documentation provides:
+- Complete parameter listings with defaults
+- Rule specifications and dependencies
+- Output file formats
+- Environment dependencies
+
+Unlike tutorials, reference documentation:
+- Does not teach concepts
+- Assumes familiarity with the workflow
+- Provides comprehensive, structured information
+- Is organized by topic, not learning sequence
+
+* Using This Section
+
+- **Configuration**: All config.yaml parameters with defaults and guidelines
+- **Rules**: Each Snakemake rule's inputs, outputs, and parameters
+- **Environments**: Conda environment specifications per rule
+- **Outputs**: File formats and interpretation
+
+* Related Sections
+
+- [[file:../tutorials/index.org][Tutorials]]: Learn by doing
+- [[file:../quickstart.org][Quickstart]]: Get started quickly
+- [[file:../devnotes.org][Developer Notes]]: Extending the workflow

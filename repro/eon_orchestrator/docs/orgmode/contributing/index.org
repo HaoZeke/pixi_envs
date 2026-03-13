@@ -1,0 +1,198 @@
+#+title: Contributing Guide
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+* Contributing to NEB Orchestrator
+
+Thank you for your interest in contributing to NEB Orchestrator!
+
+* Table of Contents
+
+#+BEGIN_EXPORT rst
+.. toctree::
+   :maxdepth: 2
+
+   code_of_conduct
+   development
+   testing
+   documentation
+#+END_EXPORT
+
+* Getting Started
+
+** Fork and Clone
+
+#+begin_src bash
+# Fork on GitHub, then clone
+git clone https://github.com/YOUR_USERNAME/eon_orchestrator.git
+cd eon_orchestrator
+git remote add upstream https://github.com/epfl/eon_orchestrator.git
+#+end_src
+
+** Set Up Development Environment
+
+#+begin_src bash
+# Install development dependencies
+pip install snakemake>=7.0 pre-commit
+
+# Install pre-commit hooks
+pre-commit install
+#+end_src
+
+* How to Contribute
+
+** Reporting Bugs
+
+Before creating bug reports, please check existing issues. When creating a bug report, include:
+
+- Clear title and description
+- Steps to reproduce
+- Expected vs actual behavior
+- Snakemake version
+- Configuration file (with paths redacted)
+- Error messages and logs
+
+** Suggesting Enhancements
+
+Enhancement suggestions are welcome! Please provide:
+
+- Clear description of the enhancement
+- Motivation and use case
+- Examples of how it would work
+- Discussion of alternatives considered
+
+** Pull Requests
+
+1. Create a feature branch from =main=
+2. Make your changes
+3. Write or update tests
+4. Update documentation
+5. Run pre-commit checks
+6. Submit PR with clear description
+
+* Development Workflow
+
+** Branch Naming
+
+- =feature/description=: New features
+- =fix/description=: Bug fixes
+- =docs/description=: Documentation updates
+- =refactor/description=: Code refactoring
+
+** Commit Messages
+
+Follow [[https://www.conventionalcommits.org/][Conventional Commits]]:
+
+#+begin_src
+feat: add DFT validation step
+fix: correct force convergence threshold
+docs: update configuration reference
+refactor: simplify NEB rule structure
+#+end_src
+
+** Code Style
+
+- Python: PEP 8 with Black formatting
+- Snakemake: Follow Snakemake best practices
+- Documentation: Orgmode format
+- Line length: 88 characters (Python), 100 (Snakemake)
+
+* Adding New Rules
+
+When adding a new workflow rule:
+
+1. Create =workflow/rules/your_rule.smk=
+2. Include comprehensive docstring
+3. Define clear inputs and outputs
+4. Use parameters for configurability
+5. Add conda environment in =workflow/envs/=
+6. Update main Snakefile
+7. Document in =docs/orgmode/reference/rules.org=
+8. Add tests in =tests/=
+
+** Example Rule Structure
+
+#+begin_src snakemake
+# -*- mode: snakemake; -*-
+"""
+Rule description with purpose and methodology.
+
+References
+----------
+- Citation 1
+- Citation 2
+"""
+
+rule your_rule_name:
+    """
+    Detailed rule docstring.
+
+    Parameters
+    ----------
+    config['your_param'] : type
+        Description with default value
+    """
+    input:
+        # Input files
+    output:
+        # Output files
+    params:
+        # Parameters from config
+    conda:
+        "envs/your_env.yaml"
+    run:
+        # Implementation
+#+end_src
+
+* Testing
+
+** Workflow Validation
+
+#+begin_src bash
+# Dry run
+snakemake -n --configfile config/config.yaml
+
+# Generate rulegraph
+snakemake --rulegraph > test_rulegraph.dot
+#+end_src
+
+** Example Testing
+
+#+begin_src bash
+# Test with HCN example
+cd examples/hcn_isom
+snakemake -n --configfile config.yaml
+#+end_src
+
+* Documentation
+
+** Building Documentation
+
+#+begin_src bash
+cd docs/source
+pip install sphinx shibuya
+sphinx-build -b html . _build/html
+#+end_src
+
+** Documentation Standards
+
+- Tutorials: Follow Diataxis tutorial quadrant
+- Reference: Comprehensive, structured, no opinions
+- Explanation: Context, background, why not how
+- How-to: Problem-focused, step-by-step
+
+* Code of Conduct
+
+Please read and follow our [[file:code_of_conduct.org][Code of Conduct]].
+
+* Questions?
+
+- Open an issue on [[https://github.com/epfl/eon_orchestrator/issues][GitHub]]
+- Check [[file:../tutorials/index.org][Tutorials]] for usage guides
+- Review [[file:../reference/index.org][Reference]] for technical details
+
+* License
+
+By contributing, you agree that your contributions will be licensed under the
+MIT License. See [[file:../../LICENSE][LICENSE]] file for details.

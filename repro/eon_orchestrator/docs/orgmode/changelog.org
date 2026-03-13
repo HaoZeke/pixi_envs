@@ -1,0 +1,85 @@
+#+title: Changelog
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Changelog
+
+All notable changes to NEB Orchestrator are documented in this file.
+
+The format is based on [[https://keepachangelog.com/en/1.1.0/][Keep a Changelog]],
+and this project adheres to [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
+
+* [Unreleased]
+
+** Added
+- Initial workflow structure with modular Snakemake rules
+- PET-MAD/uPET model retrieval from HuggingFace
+- IRA alignment for endpoint preparation
+- CI-NEB optimization with energy-weighted springs
+- MMF refinement at climbing image
+- 1D and 2D visualization with rgpycrumbs
+- Example HCN isomerization system
+- GitHub Actions CI/CD workflows
+- Sphinx documentation with Shibuya theme
+
+** Changed
+- None yet
+
+** Deprecated
+- None yet
+
+** Removed
+- None yet
+
+** Fixed
+- None yet
+
+** Security
+- None yet
+
+* [0.1.0] - 2026-03-13
+
+** Added
+- Initial release
+- Core workflow orchestration
+- Seven modular rule files
+- Six conda environment specifications
+- Comprehensive configuration with defaults
+- Tutorial documentation (Diataxis structure)
+- Reference documentation
+- Example system (HCN isomerization)
+
+* Version History
+
+| Version | Date | Description |
+|---------+------------+-------------|
+| 0.1.0 | 2026-03-13 | Initial release |
+
+* Upcoming Features (Roadmap)
+
+** Planned for v0.2.0
+- DFT single-point validation step
+- Multiple model ensemble support
+- Descriptor-based extrapolation detection
+- Additional example systems
+- Performance benchmarks
+
+** Under Consideration
+- QM/MM support for enzymatic systems
+- Surface reaction templates
+- Automated parameter tuning
+- MLflow experiment tracking integration
+- Real-time workflow monitoring dashboard
+
+* Migration Guide
+
+** From v0.1.0 to v0.2.0 (Planned)
+
+No breaking changes expected. New features will be additive.
+
+* Contributors
+
+- NEB Orchestrator Team @ EPFL
+- Built on eOn (https://eondocs.org)
+- Uses PET-MAD (https://huggingface.co/lab-cosmo/pet-mad)
+- Visualization with rgpycrumbs

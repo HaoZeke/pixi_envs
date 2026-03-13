@@ -1,0 +1,283 @@
+#+title: Your First NEB Calculation
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+* Learning Objectives
+
+By the end of this tutorial, you will:
+- Set up and run your first NEB calculation
+- Understand the workflow outputs
+- Interpret energy profiles and saddle points
+- Know how to modify parameters for your system
+
+* Prerequisites
+
+** Required Software
+
+- Python 3.11+
+- Snakemake 7.0+
+- eOn client (for NEB calculations)
+- Basic command-line familiarity
+
+** Installation
+
+#+begin_src bash
+# Install snakemake
+pip install snakemake>=7.0
+
+# Verify eOn client
+which eonclient
+
+# Clone the workflow
+git clone https://github.com/epfl/eon_orchestrator.git
+cd eon_orchestrator
+#+end_src
+
+* Step 1: Prepare Input Structures
+
+** Understanding .con Files
+
+eOn uses =.con= format for atomic structures:
+
+#+begin_src text
+# Comment line
+3  # Number of atoms
+H   0.000000   0.000000   0.000000
+C   0.000000   0.000000   1.065000
+N   0.000000   0.000000   2.220000
+#+end_src
+
+** Example: HCN Isomerization
+
+We'll use the HCN → HNC isomerization example:
+
+#+begin_src bash
+# Copy example structures
+cp -r examples/hcn_isom ~/my_neb_project/
+cd ~/my_neb_project
+#+end_src
+
+** Verify Structures
+
+Check your structures with ASE or visualization software:
+
+#+begin_src python
+from ase.io import read
+hcn = read('hcn.con')
+hnc = read('hnc.con')
+print(f"HCN atoms: {len(hcn)}")
+print(f"HNC atoms: {len(hnc)}")
+#+end_src
+
+* Step 2: Configure the Workflow
+
+** Copy Configuration Template
+
+#+begin_src bash
+cp examples/hcn_isom/config.yaml my_config.yaml
+#+end_src
+
+** Edit Configuration
+
+Open =my_config.yaml= and update paths:
+
+#+begin_src yaml
+systems:
+  hcn_isom:
+    reactant: /home/yourname/my_neb_project/hcn.con
+    product: /home/yourname/my_neb_project/hnc.con
+    use_ira: true
+
+compute:
+  device: cuda  # or 'cpu' if no GPU
+#+end_src
+
+** Key Parameters to Review
+
+| Parameter | Default | When to Change |
+|-----------+---------+----------------|
+| =images= | 18 | Increase for complex reactions |
+| =converged_force= | 0.0514221 | Reduce for higher precision |
+| =max_iterations= | 1000 | Increase if not converging |
+| =device= | cuda | Set to =cpu= if no GPU |
+
+* Step 3: Run the Workflow
+
+** Dry Run (Recommended First)
+
+Validate the workflow without executing:
+
+#+begin_src bash
+snakemake -n --configfile my_config.yaml
+#+end_src
+
+Expected output:
+#+begin_src text
+Building DAG of jobs...
+Job stats:
+job                count
+---------------  -------
+get_model              1
+align_endpoints        2
+minimize_endpoints     2
+run_neb                1
+visualize              4
+total                 10
+#+end_src
+
+** Execute Workflow
+
+#+begin_src bash
+# Run with 4 CPU cores
+snakemake --configfile my_config.yaml -c4 --use-conda
+#+end_src
+
+** Monitor Progress
+
+Watch the workflow execute:
+#+begin_src text
+[2026-03-13 10:00:00] Starting job: get_model
+[2026-03-13 10:01:30] Finished job: get_model (1 of 10)
+[2026-03-13 10:01:31] Starting job: align_endpoints for hcn_isom reactant
+...
+#+end_src
+
+* Step 4: Analyze Results
+
+** Output Structure
+
+#+begin_src
+results/
+├── models/              # ML potential
+│   └── pet-mad-v1.1.0.pt
+├── endpoints/           # Minimized structures
+│   └── hcn_isom/
+│       ├── reactant.con
+│       └── product.con
+├── neb/                 # NEB outputs
+│   └── hcn_isom/
+│       ├── results.dat  # ← Key results
+│       ├── neb.con
+│       └── neb.dat
+└── plots/               # Visualizations
+    └── hcn_isom/
+        ├── 1D_path.png  # ← Energy profile
+        └── 2D_rmsd.png  # ← 2D landscape
+#+end_src
+
+** Read Results File
+
+#+begin_src bash
+cat results/neb/hcn_isom/results.dat
+#+end_src
+
+Expected format:
+#+begin_src text
+# Image    Energy (eV)    RMS Force
+0          0.000          0.001
+1          0.123          0.002
+...
+9          1.823          0.001  # ← Saddle point
+...
+17         0.612          0.001  # Product
+#+end_src
+
+** Interpret Energy Profile
+
+Key features to identify:
+1. *Reactant energy*: Reference point (0.0 eV)
+2. *Product energy*: Relative stability (~0.6 eV for HNC)
+3. *Maximum energy*: Saddle point (~1.8 eV)
+4. *Barrier height*: E_saddle - E_reactant
+
+** View Plots
+
+#+begin_src bash
+# Open energy profile
+xdg-open results/plots/hcn_isom/1D_path.png
+
+# Open 2D landscape
+xdg-open results/plots/hcn_isom/2D_rmsd.png
+#+end_src
+
+* Step 5: Validate Results
+
+** Check Convergence
+
+#+begin_src bash
+# Check final forces
+tail -20 results/neb/hcn_isom/neb.dat
+#+end_src
+
+Look for:
+- RMS force < 0.0514221 eV/Å (convergence criterion)
+- Maximum force < 0.1 eV/Å
+- Energy change < 0.001 eV between iterations
+
+** Compare with Literature
+
+For HCN isomerization:
+| Method | Barrier (eV) |
+|--------+--------------|
+| PET-MAD | ~1.8 |
+| CCSD(T) | 1.79 |
+| DFT/B3LYP | 1.85 |
+
+Your result should be within ±0.2 eV of these values.
+
+* Troubleshooting
+
+** Problem: IRA Alignment Fails
+
+*Symptoms*: Error in =align_endpoints= rule
+
+*Solutions*:
+1. Increase =alignment.kmax= to 3.0
+2. Check atom ordering is consistent
+3. Verify structures are reasonable (no overlapping atoms)
+
+** Problem: NEB Does Not Converge
+
+*Symptoms*: Maximum iterations reached, forces still high
+
+*Solutions*:
+1. Increase =max_iterations= to 2000
+2. Reduce =max_move= to 0.05
+3. Add more images (24 instead of 18)
+4. Check endpoints are properly minimized
+
+** Problem: Out of Memory (GPU)
+
+*Symptoms*: CUDA out of memory error
+
+*Solutions*:
+1. Switch to CPU: =device: cpu=
+2. Reduce number of images
+3. Use smaller model (if available)
+
+* Next Steps
+
+Now that you've completed your first NEB calculation:
+
+1. *Try Your Own System*: Replace HCN/HNC with your reactant/product
+2. *Tune Parameters*: Adjust based on system size and complexity
+3. *Advanced Features*: Explore CI-NEB, MMF refinement options
+4. *Validation*: Compare with DFT single-point calculations
+
+** Further Reading
+
+- [[file:../reference/configuration.org][Configuration Reference]] - All parameters explained
+- [[file:parameter-tuning.org][Parameter Tuning Tutorial]] - Optimize for your system
+- [[file:../devnotes.org][Developer Notes]] - Advanced usage and internals
+
+* Summary
+
+You have successfully:
+✓ Set up input structures
+✓ Configured the workflow
+✓ Executed NEB calculation
+✓ Analyzed energy profile
+✓ Validated results
+
+You're now ready to apply NEB Orchestrator to your own chemical systems!

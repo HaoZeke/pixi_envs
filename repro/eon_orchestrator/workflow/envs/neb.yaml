@@ -1,0 +1,13 @@
+name: neb-optimization
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - eonclient>=0.1.0
+      - rgpycrumbs>=0.1.0
+      - torch>=2.0
+      - metatensor-learn>=0.3
+      - metatensor-torch>=0.6
+      - metatomic>=0.1.0

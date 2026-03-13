@@ -1,0 +1,192 @@
+# NEB Orchestrator Configuration
+# ================================
+# This file defines all parameters for the NEB workflow.
+# Copy to your project directory and modify as needed.
+
+# =============================================================================
+# System Definitions
+# =============================================================================
+# Define your chemical systems here. Each system needs reactant and product
+# structures in .con format (eOn configuration files).
+
+systems:
+  # Example: HCN isomerization
+  hcn_isom:
+    reactant: /path/to/your/reactant.con
+    product: /path/to/your/product.con
+    use_ira: true  # Enable Iterative Rotational Alignment
+    # Optional: saddle point structure for 2D visualization
+    # saddle: /path/to/saddle.con
+
+  # Add more systems as needed
+  # your_system:
+  #   reactant: /path/to/reactant.con
+  #   product: /path/to/product.con
+  #   use_ira: true
+
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+# PET-MAD or uPET machine learning potential settings
+
+model:
+  name: pet-mad-v1.1.0  # Model name (used in output filename)
+  version: v1.1.0       # HuggingFace version tag
+  type: pet-mad         # Options: pet-mad, upet
+
+
+# =============================================================================
+# Compute Settings
+# =============================================================================
+
+compute:
+  device: cuda          # Options: cuda, cpu, mps (Apple Silicon)
+
+
+# =============================================================================
+# Alignment Parameters
+# =============================================================================
+# IRA (Iterative Rotational Alignment) for atom mapping
+
+alignment:
+  kmax: 1.8            # Rotation matching cutoff (Å⁻¹)
+                       # Higher values (e.g., 14) for difficult systems
+                       # Lower values for well-behaved small molecules
+
+
+# =============================================================================
+# NEB Parameters
+# =============================================================================
+# All parameters for NEB optimization
+
+neb:
+  # Minimization settings (endpoint preparation)
+  minimization:
+    max_iterations: 2000
+    converged_force: 0.0514221  # eV/Å (10^-3 Ha/Bohr)
+    opt_method: lbfgs
+    max_move: 0.1               # Å
+
+  # NEB optimization settings
+  optimization:
+    images: 18                  # Total images including endpoints
+    max_iterations: 1000
+    converged_force: 0.0514221  # eV/Å
+    opt_method: lbfgs
+    max_move: 0.1               # Å
+
+    # Energy-weighted springs
+    energy_weighted: true
+    ew_ksp_min: 0.972           # eV/Å² (minimum spring constant)
+    ew_ksp_max: 9.72            # eV/Å² (maximum spring constant)
+    ew_trigger: 0.5             # eV (energy threshold for weighting)
+
+    # Climbing image method
+    climbing_image_method: true
+    ci_after_rel: 0.8           # Relative convergence before CI activates
+
+    # MMF refinement at saddle
+    ci_mmf: true
+    ci_mmf_nsteps: 1000         # MMF refinement iterations
+
+    # SIDPP initializer
+    sidpp_growth_alpha: 0.33    # Step size for adding new images
+
+  # IDPP path generation (optional, legacy)
+  idpp:
+    number_of_intermediate_imgs: 10  # Intermediate images (total = this + 2)
+
+
+# =============================================================================
+# Visualization Parameters
+# =============================================================================
+
+plotting:
+  plot_structures: true       # Overlay atomic structures on plots
+  facecolor: white
+  title: ""                   # Optional title prefix
+
+  figure:
+    figsize: [8, 6]          # Width, height in inches
+    dpi: 300                  # Output resolution
+    zoom_ratio: 1.0           # Zoom factor for structure overlays
+
+  fonts:
+    base: 12                  # Base font size
+
+  # Structure overlay positions (normalized coordinates 0-1)
+  draw_reactant:
+    x: 0.2
+    y: 0.1
+    rad: 0.15
+
+  draw_product:
+    x: 0.8
+    y: 0.1
+    rad: 0.15
+
+  draw_saddle:
+    x: 0.5
+    y: 0.6
+    rad: 0.15
+
+  # IRA kmax for 2D RMSD landscape (higher than alignment)
+  ira_kmax: 14
+
+  # ASE rotation for structure visualization (degrees)
+  aserot: 0
+
+
+# =============================================================================
+# Path Configuration
+# =============================================================================
+# Where to store all outputs
+
+paths:
+  models: results/models          # ML potential checkpoints
+  endpoints: results/endpoints    # Minimized endpoint structures
+  neb: results/neb                # NEB optimization outputs
+  idpp: results/idpp              # IDPP path files (if used)
+  plots: results/plots            # Visualization outputs
+  cache: results/cache            # Intermediate cache files
+
+
+# =============================================================================
+# Parameter Guidelines
+# =============================================================================
+#
+# When to adjust parameters:
+#
+# 1. Number of images (neb.optimization.images):
+#    - Simple reactions (single bond break/form): 12-16 images
+#    - Complex reactions (multiple bond changes): 18-24 images
+#    - Very complex (rearrangements): 24-30 images
+#
+# 2. Force convergence (neb.optimization.converged_force):
+#    - Standard: 0.0514221 eV/Å (10^-3 Ha/Bohr)
+#    - High precision: 0.0257110 eV/Å (0.5×10^-3 Ha/Bohr)
+#    - Quick screening: 0.1028442 eV/Å (2×10^-3 Ha/Bohr)
+#
+# 3. IRA kmax (alignment.kmax):
+#    - Well-behaved small molecules: 1.5-2.0
+#    - Larger molecules: 2.0-3.0
+#    - Difficult atom mapping: 3.0-5.0
+#    - 2D RMSD visualization: 14 (fixed for consistency)
+#
+# 4. Spring constants (neb.optimization.ew_ksp_*):
+#    - Default ratio (1:10) works for most systems
+#    - Very flat barriers: reduce both by 2×
+#    - Very sharp barriers: increase both by 2×
+#
+# 5. Cell size (hardcoded to [25, 25, 25] in align_endpoints.smk):
+#    - Small molecules (<20 atoms): 20-25 Å
+#    - Medium molecules (20-50 atoms): 25-30 Å
+#    - Large molecules (>50 atoms): 30-40 Å
+#    - Note: Workflow currently targets gas-phase molecules only
+#
+# System Applicability:
+# - This workflow is optimized for gas-phase molecular systems
+# - Surface reactions: Modify cell size and consider periodic boundary conditions
+# - Condensed phase: Requires additional solvation/environment setup
+# - Enzymatic reactions: Consider QM/MM setup with eOn

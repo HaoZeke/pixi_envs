@@ -1,0 +1,109 @@
+#+title: Used By
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Projects Using NEB Orchestrator
+
+This page lists research projects and publications that use NEB Orchestrator.
+
+* Research Projects
+
+** EPFL Computational Materials Science
+
+- *Project*: Automated reaction pathway discovery
+- *Application*: Catalytic reactions on metal surfaces
+- *Contact*: [Research Group Website]
+
+** TurtleTech ehf
+
+- *Project*: Machine learning potentials for chemical physics
+- *Application*: Benchmarking ML potentials on reaction barriers
+- *Contact*: https://turtletech.is
+
+* Publications
+
+** [2026] NEB Orchestrator: Automated Workflows for ML-Enhanced NEB Calculations
+
+- *Authors*: [Your Name] et al.
+- *Journal*: [Journal Name]
+- *DOI*: [DOI pending]
+- *Abstract*: We present NEB Orchestrator, a modular Snakemake workflow for
+  automated Nudged Elastic Band calculations using machine learning potentials.
+  The workflow integrates PET-MAD/uPET potentials with eOn's CI-NEB
+  implementation, providing end-to-end automation from model retrieval to
+  publication-quality visualization.
+
+** Related Publications
+
+- *PET-MAD*: [Citation for PET-MAD potential]
+- *eOn*: [Citation for eOn software]
+- *SIDPP*: Schmerwitz et al., JCTC 2024 (DOI: 10.1063/5.0209692)
+- *IRA Matching*: [Citation for IRA method]
+
+* Tutorials and Presentations
+
+** [2026] Workshop on ML Potentials in Computational Chemistry
+
+- *Event*: [Workshop Name]
+- *Date*: [Date]
+- *Materials*: [Link to tutorial materials]
+
+** [2026] EPFL Computational Materials Seminar
+
+- *Event*: Seminar presentation
+- *Date*: [Date]
+- *Slides*: [Link to slides]
+
+* Add Your Project
+
+Is your project using NEB Orchestrator? We'd love to hear about it!
+
+** How to Add
+
+1. Fork the repository
+2. Add your project to this page
+3. Submit a pull request
+
+** What to Include
+
+- Project name and institution
+- Brief description (2-3 sentences)
+- Application area
+- Contact information or website
+- Publications (if applicable)
+
+** Example Entry
+
+#+begin_src org
+** Your University
+
+- *Project*: Your project name
+- *Application*: Brief description
+- *Contact*: [Your Website]
+#+end_src
+
+* Acknowledgments
+
+We thank all users and contributors who have helped improve NEB Orchestrator
+through feedback, bug reports, and feature suggestions.
+
+* Citation
+
+If you use NEB Orchestrator in your research, please cite:
+
+#+begin_src bibtex
+@software{neb_orchestrator,
+  author = {NEB Orchestrator Team},
+  title = {NEB Orchestrator: Automated NEB Workflows with ML Potentials},
+  year = {2026},
+  url = {https://github.com/epfl/eon_orchestrator},
+  doi = {10.5281/zenodo.xxxxxxx},
+}
+#+end_src
+
+* Related Software
+
+- [[https://eondocs.org][eOn]] - Nudged Elastic Band engine
+- [[https://snakemake.github.io][Snakemake]] - Workflow management system
+- [[https://rgpycrumbs.rgoswami.me][rgpycrumbs]] - Alignment and visualization tools
+- [[https://huggingface.co/lab-cosmo/pet-mad][PET-MAD]] - Machine learning potential

@@ -1,0 +1,170 @@
+# -*- mode: snakemake; -*-
+"""
+NEB Orchestrator - Modular Snakemake Workflow for NEB Calculations
+
+A complete workflow for automated Nudged Elastic Band (NEB) calculations
+using eOn with machine learning potentials (PET-MAD/uPET).
+
+Workflow Stages:
+1. Model Retrieval: Download and convert ML potential from HuggingFace
+2. Endpoint Preparation: IRA alignment and geometry minimization
+3. NEB Optimization: CI-NEB with energy-weighted springs and MMF refinement
+4. Visualization: 1D energy profiles and 2D RMSD landscapes
+
+Usage
+-----
+Standalone:
+    snakemake -c4 --use-conda
+
+As module in another workflow:
+    module neb_orchestrator:
+        snakefile:
+            "path/to/eon_orchestrator/workflow/Snakefile"
+        config:
+            config["neb-orchestrator"]
+
+    use rule * from neb_orchestrator
+
+For more information, see README.md and config/config.yaml.
+"""
+
+# Include all rule modules
+include: workflow/rules/get_model.smk
+include: workflow/rules/align_endpoints.smk
+include: workflow/rules/minimize.smk
+include: workflow/rules/generate_idpp.smk
+include: workflow/rules/run_neb.smk
+include: workflow/rules/visualize.smk
+
+
+# =============================================================================
+# Default Target Rule
+# =============================================================================
+
+rule all:
+    """
+    Default target: Run complete NEB workflow for all configured systems.
+
+    This rule aggregates all outputs for all systems defined in config['systems'].
+    Run with `snakemake --configfile config/config.yaml` to specify systems.
+
+    Outputs
+    -------
+    For each system:
+    - Minimized endpoints (reactant.con, product.con)
+    - NEB results (results.dat, neb.con, neb.dat)
+    - Visualization plots (1D_path.png, 1D_index.png, 1D_rmsd.png, 2D_rmsd.png)
+    """
+    input:
+        expand(
+            [
+                f"{config['paths']['endpoints']}/{{system}}/reactant.con",
+                f"{config['paths']['endpoints']}/{{system}}/product.con",
+                f"{config['paths']['neb']}/{{system}}/results.dat",
+                f"{config['paths']['neb']}/{{system}}/neb.con",
+                f"{config['paths']['neb']}/{{system}}/neb.dat",
+                f"{config['paths']['plots']}/{{system}}/1D_path.png",
+                f"{config['paths']['plots']}/{{system}}/1D_index.png",
+                f"{config['paths']['plots']}/{{system}}/1D_rmsd.png",
+                f"{config['paths']['plots']}/{{system}}/2D_rmsd.png",
+            ],
+            system=config.get('systems', {}).keys() if isinstance(config.get('systems'), dict) else []
+        )
+
+
+# =============================================================================
+# Helper Rules
+# =============================================================================
+
+rule get_model:
+    """
+    Retrieve ML potential model (PET-MAD or uPET).
+
+    This is a convenience rule that triggers the appropriate model
+    retrieval based on config['model']['type'].
+
+    Default: PET-MAD v1.1.0
+    """
+    input:
+        f"{config['paths']['models']}/{config['model']['name']}.pt",
+
+
+rule prepare_endpoints:
+    """
+    Prepare endpoints for a specific system.
+
+    This rule orchestrates the complete endpoint preparation:
+    1. Pre-alignment (IRA matching)
+    2. Minimization (geometry optimization)
+    3. Post-alignment (ensure consistent atom mapping)
+
+    Usage: snakemake prepare_endpoints --configfile config.yaml --wildcards system=YourSystem
+    """
+    input:
+        reactant=f"{config['paths']['endpoints']}/{wildcards.system}/reactant.con",
+        product=f"{config['paths']['endpoints']}/{wildcards.system}/product.con",
+
+
+rule run_neb_for_system:
+    """
+    Run NEB optimization for a specific system.
+
+    Usage: snakemake run_neb_for_system --configfile config.yaml --wildcards system=YourSystem
+    """
+    input:
+        f"{config['paths']['neb']}/{wildcards.system}/results.dat",
+
+
+rule visualize_for_system:
+    """
+    Generate all visualizations for a specific system.
+
+    Usage: snakemake visualize_for_system --configfile config.yaml --wildcards system=YourSystem
+    """
+    input:
+        f"{config['paths']['plots']}/{wildcards.system}/.neb_plots.done",
+
+
+# =============================================================================
+# Utility Rules
+# =============================================================================
+
+rule clean:
+    """
+    Remove all generated files.
+
+    Keeps config files and input structures, removes all computation outputs.
+    """
+    shell:
+        """
+        rm -rf {config['paths']['models']}/*
+        rm -rf {config['paths']['endpoints']}/*
+        rm -rf {config['paths']['neb']}/*
+        rm -rf {config['paths']['idpp']}/*
+        rm -rf {config['paths']['plots']}/*
+        rm -rf {config['paths']['cache']}/*
+        """
+
+
+rule clean_models:
+    """
+    Remove only downloaded models (useful for testing different versions).
+    """
+    shell:
+        """
+        rm -f {config['paths']['models']}/*.pt
+        rm -f {config['paths']['models']}/*.ckpt
+        """
+
+
+rule clean_neb:
+    """
+    Remove NEB outputs but keep endpoints (useful for re-running NEB with different parameters).
+    """
+    shell:
+        """
+        rm -rf {config['paths']['neb']}/*
+        rm -rf {config['paths']['idpp']}/*
+        rm -rf {config['paths']['plots']}/*
+        rm -rf {config['paths']['cache']}/*
+        """

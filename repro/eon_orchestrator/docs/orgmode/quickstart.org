@@ -1,0 +1,173 @@
+#+title: Quickstart Guide
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Prerequisites
+
+Before using {{workflow}}, ensure you have:
+
+1. *Snakemake 7.0+* installed
+2. *eOn client* available in your PATH
+3. *Python 3.11+* with pip
+4. *CUDA-capable GPU* (recommended) or CPU-only setup
+
+* Installation
+
+** Step 1: Clone the Workflow
+
+#+begin_src bash
+git clone https://github.com/epfl/eon_orchestrator.git
+cd eon_orchestrator
+#+end_src
+
+** Step 2: Install Dependencies
+
+#+begin_src bash
+# Install snakemake if not already installed
+pip install snakemake>=7.0
+
+# Verify eOn client is available
+which eonclient
+#+end_src
+
+* Configuration
+
+** Step 1: Copy Configuration Template
+
+#+begin_src bash
+cp config/config.yaml my_config.yaml
+#+end_src
+
+** Step 2: Edit Configuration
+
+Open =my_config.yaml= and modify:
+
+1. *System definitions*: Point to your reactant/product .con files
+2. *Model selection*: Choose PET-MAD version
+3. *Compute device*: Set to =cuda= or =cpu=
+4. *NEB parameters*: Adjust images, convergence, etc.
+
+Example minimal configuration:
+
+#+begin_src yaml
+systems:
+  my_reaction:
+    reactant: /path/to/reactant.con
+    product: /path/to/product.con
+    use_ira: true
+
+model:
+  name: pet-mad-v1.1.0
+  version: v1.1.0
+  type: pet-mad
+
+compute:
+  device: cuda
+#+end_src
+
+* Running the Workflow
+
+** Basic Execution
+
+#+begin_src bash
+# Run with 4 CPU cores
+snakemake --configfile my_config.yaml -c4 --use-conda
+#+end_src
+
+** Dry Run (Validate DAG)
+
+#+begin_src bash
+# Check workflow structure without executing
+snakemake --configfile my_config.yaml -n
+#+end_src
+
+** Generate Rulegraph
+
+#+begin_src bash
+# Visualize workflow dependencies
+snakemake --configfile my_config.yaml --rulegraph | dot -Tpng > workflow.png
+#+end_src
+
+** Run Specific Target
+
+#+begin_src bash
+# Run only endpoint preparation
+snakemake --configfile my_config.yaml prepare_endpoints --wildcards system=my_reaction
+
+# Run only NEB optimization
+snakemake --configfile my_config.yaml run_neb_for_system --wildcards system=my_reaction
+
+# Run only visualization
+snakemake --configfile my_config.yaml visualize_for_system --wildcards system=my_reaction
+#+end_src
+
+* Understanding Outputs
+
+After successful execution, check:
+
+** Results Directory Structure
+
+#+begin_src
+results/
+├── models/              # Downloaded ML potentials
+│   └── pet-mad-v1.1.0.pt
+├── endpoints/           # Minimized endpoint structures
+│   └── my_reaction/
+│       ├── reactant.con
+│       └── product.con
+├── neb/                 # NEB optimization outputs
+│   └── my_reaction/
+│       ├── results.dat  # Final energies and forces
+│       ├── neb.con      # Optimized path
+│       └── neb.dat      # Iteration history
+└── plots/               # Visualization outputs
+    └── my_reaction/
+        ├── 1D_path.png   # Energy vs path
+        ├── 1D_index.png  # Energy vs index
+        ├── 1D_rmsd.png   # Energy vs RMSD
+        └── 2D_rmsd.png   # 2D landscape
+#+end_src
+
+** Key Output Files
+
+- =results.dat=: Final NEB results with image energies and forces
+- =neb.con=: Optimized path coordinates (all images)
+- =neb.dat=: Convergence history
+- =1D_path.png=: Energy profile with reaction coordinate
+- =2D_rmsd.png=: 2D RMSD landscape showing basins and saddle
+
+* Next Steps
+
+- [[file:tutorials/][Tutorials]] - Detailed guides for specific tasks
+- [[file:reference/][Reference]] - Full configuration options
+- [[file:devnotes.org][Developer Notes]] - Extending the workflow
+
+* Troubleshooting
+
+** Common Issues
+
+*** eOn client not found
+
+#+begin_src bash
+# Ensure eOn is installed and in PATH
+which eonclient
+# If not found, install eOn from source or conda
+#+end_src
+
+*** CUDA out of memory
+
+#+begin_src yaml
+# In config.yaml, reduce images or switch to CPU
+compute:
+  device: cpu
+#+end_src
+
+*** IRA alignment fails
+
+#+begin_src yaml
+# Increase kmax for difficult systems
+alignment:
+  kmax: 3.0  # or higher
+#+end_src
+
+For more help, see [[file:reference/][Reference]] documentation.

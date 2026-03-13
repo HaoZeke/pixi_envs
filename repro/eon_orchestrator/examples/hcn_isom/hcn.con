@@ -1,0 +1,7 @@
+# HCN reactant structure for NEB isomerization
+# Units: Angstrom
+# Format: eOn .con file
+3
+H   0.000000   0.000000   0.000000
+C   0.000000   0.000000   1.065000
+N   0.000000   0.000000   2.220000

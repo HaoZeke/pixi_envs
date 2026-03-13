@@ -1,0 +1,53 @@
+#+title: NEB Orchestrator Documentation
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+#+macro: workflow NEB Orchestrator
+#+macro: version 0.1.0
+
+* Overview
+
+{{workflow}} is a modular Snakemake workflow for automated Nudged Elastic Band (NEB)
+calculations using eOn with machine learning potentials (PET-MAD/uPET).
+
+** Workflow Stages
+
+1. *Model Retrieval*: Download and convert ML potential from HuggingFace
+2. *Endpoint Preparation*: IRA alignment and geometry minimization
+3. *NEB Optimization*: CI-NEB with energy-weighted springs and MMF refinement
+4. *Visualization*: 1D energy profiles and 2D RMSD landscapes
+
+** Quick Start
+
+#+begin_src bash
+# Clone the workflow
+git clone https://github.com/epfl/eon_orchestrator.git
+cd eon_orchestrator
+
+# Configure your systems
+cp config/config.yaml my_config.yaml
+# Edit my_config.yaml with your system paths
+
+# Run the workflow
+snakemake --configfile my_config.yaml -c4 --use-conda
+#+end_src
+
+** Documentation Structure
+
+- [[file:quickstart.org][Quickstart]] - Get started in 5 minutes
+- [[file:tutorials/][Tutorials]] - Step-by-step guides
+- [[file:reference/][Reference]] - API and configuration reference
+- [[file:devnotes.org][Developer Notes]] - Contributing and development
+
+** System Requirements
+
+- Python 3.11+
+- Snakemake 7.0+
+- eOn client
+- PET-MAD or uPET model (auto-downloaded)
+- CUDA-capable GPU (recommended) or CPU
+
+** License
+
+MIT License - see [[file:../../LICENSE][LICENSE]] file for details.

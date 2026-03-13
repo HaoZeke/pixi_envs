@@ -1,0 +1,86 @@
+# HCN Isomerization Example Configuration
+# ========================================
+# Copy this file and update paths for your system
+
+systems:
+  hcn_isom:
+    reactant: /path/to/eon_orchestrator/examples/hcn_isom/hcn.con
+    product: /path/to/eon_orchestrator/examples/hcn_isom/hnc.con
+    use_ira: true
+
+model:
+  name: pet-mad-v1.1.0
+  version: v1.1.0
+  type: pet-mad
+
+compute:
+  device: cuda  # Change to 'cpu' if no GPU available
+
+alignment:
+  kmax: 1.8
+
+neb:
+  minimization:
+    max_iterations: 2000
+    converged_force: 0.0514221
+    opt_method: lbfgs
+    max_move: 0.1
+
+  optimization:
+    images: 18
+    max_iterations: 1000
+    converged_force: 0.0514221
+    opt_method: lbfgs
+    max_move: 0.1
+
+    energy_weighted: true
+    ew_ksp_min: 0.972
+    ew_ksp_max: 9.72
+    ew_trigger: 0.5
+
+    climbing_image_method: true
+    ci_after_rel: 0.8
+
+    ci_mmf: true
+    ci_mmf_nsteps: 1000
+
+    sidpp_growth_alpha: 0.33
+
+plotting:
+  plot_structures: true
+  facecolor: white
+  title: "HCN → HNC Isomerization"
+
+  figure:
+    figsize: [8, 6]
+    dpi: 300
+    zoom_ratio: 1.0
+
+  fonts:
+    base: 12
+
+  draw_reactant:
+    x: 0.2
+    y: 0.1
+    rad: 0.15
+
+  draw_product:
+    x: 0.8
+    y: 0.1
+    rad: 0.15
+
+  draw_saddle:
+    x: 0.5
+    y: 0.6
+    rad: 0.15
+
+  ira_kmax: 14
+  aserot: 0
+
+paths:
+  models: results/models
+  endpoints: results/endpoints
+  neb: results/neb
+  idpp: results/idpp
+  plots: results/plots
+  cache: results/cache

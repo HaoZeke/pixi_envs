@@ -1,0 +1,11 @@
+name: neb-model
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - metatrain>=2024.0
+  - pip
+  - pip:
+      - torch>=2.0
+      - metatensor-learn>=0.3
+      - metatensor-torch>=0.6

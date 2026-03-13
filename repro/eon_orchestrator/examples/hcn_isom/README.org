@@ -1,0 +1,112 @@
+#+title: HCN Isomerization Example
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Overview
+
+This example demonstrates the NEB Orchestrator workflow using the classic
+HCN → HNC isomerization reaction. This is a well-studied system with a
+known barrier of approximately 1.5-2.0 eV depending on the level of theory.
+
+* System Description
+
+** Reactant: HCN (Hydrogen Cyanide)
+- Linear molecule: H-C≡N
+- C-H bond: 1.065 Å
+- C≡N bond: 1.155 Å
+- Ground state: ^1Σ^+
+
+** Product: HNC (Hydrogen Isocyanide)
+- Linear molecule: H-N≡C
+- N-H bond: 1.035 Å
+- N≡C bond: 1.155 Å
+- Metastable isomer (~0.6 eV above HCN)
+
+** Transition State
+- Bent geometry
+- Barrier height: ~1.8 eV (PET-MAD prediction)
+- Imaginary frequency: ~2000i cm^-1
+
+* Files
+
+- =hcn.con=: Reactant structure (HCN)
+- =hnc.con=: Product structure (HNC)
+- =config.yaml=: Pre-configured workflow parameters
+
+* Running the Example
+
+** Step 1: Copy Configuration
+
+#+begin_src bash
+cd examples/hcn_isom
+cp config.yaml ../../my_hcn_config.yaml
+#+end_src
+
+** Step 2: Update Paths
+
+Edit =my_hcn_config.yaml= to point to the example structures:
+
+#+begin_src yaml
+systems:
+  hcn_isom:
+    reactant: /absolute/path/to/eon_orchestrator/examples/hcn_isom/hcn.con
+    product: /absolute/path/to/eon_orchestrator/examples/hcn_isom/hnc.con
+    use_ira: true
+#+end_src
+
+** Step 3: Run Workflow
+
+#+begin_src bash
+cd ../../  # Back to eon_orchestrator root
+snakemake --configfile my_hcn_config.yaml -c4 --use-conda
+#+end_src
+
+* Expected Results
+
+** Energy Profile
+
+The 1D energy profile should show:
+- Reactant (HCN) at 0.0 eV (reference)
+- Product (HNC) at ~0.6 eV
+- Saddle point at ~1.8 eV
+- Barrier height: ~1.8 eV (forward), ~1.2 eV (reverse)
+
+** Key Outputs
+
+- =results/neb/hcn_isom/results.dat=: Final energies and forces
+- =results/plots/hcn_isom/1D_path.png=: Energy profile
+- =results/plots/hcn_isom/2D_rmsd.png=: 2D landscape
+
+* Validation
+
+Compare with literature values:
+
+| Method | Barrier (eV) | Reference |
+|--------+--------------+-----------|
+| PET-MAD | ~1.8 | This work |
+| CCSD(T)/CBS | 1.79 | Bowman et al. (2003) |
+| DFT/B3LYP | 1.85 | Standard benchmark |
+
+* Troubleshooting
+
+** IRA Alignment Fails
+
+If the pre-alignment step fails:
+- Increase =alignment.kmax= from 1.8 to 3.0 in config
+- Check that atom ordering is consistent between HCN and HNC
+
+** NEB Does Not Converge
+
+If NEB optimization stalls:
+- Increase number of images from 18 to 24
+- Reduce =max_move= from 0.1 to 0.05
+- Check force convergence threshold
+
+* Next Steps
+
+After successfully running this example:
+1. Try with your own molecular system
+2. Adjust parameters based on system size
+3. Validate barrier heights against DFT or experiment
+
+See [[file:../../docs/orgmode/quickstart.org][Quickstart Guide]] for detailed instructions.

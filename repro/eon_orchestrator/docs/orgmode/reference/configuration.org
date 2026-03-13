@@ -1,0 +1,394 @@
+#+title: Configuration Reference
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+* Configuration Reference
+
+Complete reference for =config/config.yaml= parameters.
+
+* System Definitions
+
+** =systems=
+
+Dictionary of chemical systems to process.
+
+*** Structure
+
+#+begin_src yaml
+systems:
+  system_name:
+    reactant: /path/to/reactant.con
+    product: /path/to/product.con
+    use_ira: true
+    saddle: /path/to/saddle.con  # Optional
+#+end_src
+
+*** Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------+------+----------+---------+-------------|
+| =reactant= | string | Yes | - | Path to reactant .con file |
+| =product= | string | Yes | - | Path to product .con file |
+| =use_ira= | boolean | No | =true= | Enable IRA alignment |
+| =saddle= | string | No | - | Path to saddle point (for 2D plots) |
+
+*** Example
+
+#+begin_src yaml
+systems:
+  hcn_isom:
+    reactant: /data/hcn.con
+    product: /data/hnc.con
+    use_ira: true
+
+  proton_transfer:
+    reactant: /data/pt_reactant.con
+    product: /data/pt_product.con
+    use_ira: true
+    saddle: /data/pt_saddle.con
+#+end_src
+
+* Model Configuration
+
+** =model=
+
+Machine learning potential settings.
+
+*** Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------+------+----------+---------+-------------|
+| =name= | string | Yes | =pet-mad-v1.1.0= | Model filename |
+| =version= | string | Yes | =v1.1.0= | HuggingFace version tag |
+| =type= | string | No | =pet-mad= | Model type (=pet-mad= or =upet=) |
+
+*** Available Models
+
+- =pet-mad-v1.1.0=: PET-MAD v1.1.0 (recommended)
+- =pet-mad-v1.0.0=: PET-MAD v1.0.0 (legacy)
+- =upet=: Universal PET (experimental)
+
+*** Example
+
+#+begin_src yaml
+model:
+  name: pet-mad-v1.1.0
+  version: v1.1.0
+  type: pet-mad
+#+end_src
+
+* Compute Settings
+
+** =compute=
+
+Hardware and device configuration.
+
+*** Parameters
+
+| Parameter | Type | Required | Default | Options |
+|-----------+------+----------+---------+---------|
+| =device= | string | No | =cuda= | =cuda=, =cpu=, =mps= |
+
+*** Device Selection
+
+- =cuda=: NVIDIA GPU (recommended for performance)
+- =cpu=: CPU-only (slower but universally available)
+- =mps=: Apple Silicon (M1/M2/M3)
+
+*** Example
+
+#+begin_src yaml
+compute:
+  device: cuda
+#+end_src
+
+* Alignment Parameters
+
+** =alignment=
+
+IRA (Iterative Rotational Alignment) settings.
+
+*** Parameters
+
+| Parameter | Type | Required | Default | Range | Description |
+|-----------+------+----------+---------+-------+-------------|
+| =kmax= | float | No | 1.8 | 1.0-14.0 | Rotation matching cutoff (Å⁻¹) |
+
+*** Guidelines
+
+- *Small molecules* (<20 atoms): 1.5-2.0 Å⁻¹
+- *Medium molecules* (20-50 atoms): 2.0-3.0 Å⁻¹
+- *Difficult systems*: 3.0-5.0 Å⁻¹
+- *2D visualization*: 14 Å⁻¹ (fixed)
+
+*** Example
+
+#+begin_src yaml
+alignment:
+  kmax: 1.8
+#+end_src
+
+* NEB Parameters
+
+** =neb=
+
+Complete NEB calculation settings.
+
+*** =neb.minimization=
+
+Endpoint geometry optimization.
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =max_iterations= | int | 2000 | Maximum optimization steps |
+| =converged_force= | float | 0.0514221 | Force threshold (eV/Å) |
+| =opt_method= | string | =lbfgs= | Optimizer method |
+| =max_move= | float | 0.1 | Maximum step size (Å) |
+
+*** =neb.optimization=
+
+NEB calculation parameters.
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =images= | int | 18 | Number of NEB images |
+| =max_iterations= | int | 1000 | Maximum NEB iterations |
+| =converged_force= | float | 0.0514221 | Force threshold (eV/Å) |
+| =opt_method= | string | =lbfgs= | Optimizer method |
+| =max_move= | float | 0.1 | Maximum step size (Å) |
+
+**** Energy-Weighted Springs
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =energy_weighted= | bool | =true= | Enable energy weighting |
+| =ew_ksp_min= | float | 0.972 | Minimum spring constant (eV/Å²) |
+| =ew_ksp_max= | float | 9.72 | Maximum spring constant (eV/Å²) |
+| =ew_trigger= | float | 0.5 | Energy threshold (eV) |
+
+**** Climbing Image
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =climbing_image_method= | bool | =true= | Enable CI method |
+| =ci_after_rel= | float | 0.8 | Relative convergence for CI |
+
+**** MMF Refinement
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =ci_mmf= | bool | =true= | Enable MMF at CI |
+| =ci_mmf_nsteps= | int | 1000 | MMF refinement steps |
+
+**** SIDPP Initializer
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =sidpp_growth_alpha= | float | 0.33 | Path growth step size |
+
+*** =neb.idpp=
+
+Legacy IDPP path generation (optional).
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =number_of_intermediate_imgs= | int | 10 | Intermediate images |
+
+*** Example
+
+#+begin_src yaml
+neb:
+  minimization:
+    max_iterations: 2000
+    converged_force: 0.0514221
+    opt_method: lbfgs
+    max_move: 0.1
+
+  optimization:
+    images: 18
+    max_iterations: 1000
+    converged_force: 0.0514221
+    opt_method: lbfgs
+    max_move: 0.1
+
+    energy_weighted: true
+    ew_ksp_min: 0.972
+    ew_ksp_max: 9.72
+    ew_trigger: 0.5
+
+    climbing_image_method: true
+    ci_after_rel: 0.8
+
+    ci_mmf: true
+    ci_mmf_nsteps: 1000
+
+    sidpp_growth_alpha: 0.33
+
+  idpp:
+    number_of_intermediate_imgs: 10
+#+end_src
+
+* Visualization Parameters
+
+** =plotting=
+
+Plot generation settings.
+
+*** General
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =plot_structures= | bool | =true= | Overlay atomic structures |
+| =facecolor= | string | =white= | Background color |
+| =title= | string | =""= | Plot title prefix |
+
+*** Figure Settings
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =figsize= | list | =[8, 6]= | Figure size (inches) |
+| =dpi= | int | 300 | Output resolution |
+| =zoom_ratio= | float | 1.0 | Structure zoom factor |
+
+*** Fonts
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =base= | int | 12 | Base font size |
+
+*** Structure Overlays
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =draw_reactant.x= | float | 0.2 | X position (normalized) |
+| =draw_reactant.y= | float | 0.1 | Y position (normalized) |
+| =draw_reactant.rad= | float | 0.15 | Circle radius |
+| =draw_product.x= | float | 0.8 | X position |
+| =draw_product.y= | float | 0.1 | Y position |
+| =draw_product.rad= | float | 0.15 | Circle radius |
+| =draw_saddle.x= | float | 0.5 | X position |
+| =draw_saddle.y= | float | 0.6 | Y position |
+| =draw_saddle.rad= | float | 0.15 | Circle radius |
+
+*** Advanced
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =ira_kmax= | float | 14 | IRA kmax for 2D plots |
+| =aserot= | float | 0 | ASE rotation (degrees) |
+
+*** Example
+
+#+begin_src yaml
+plotting:
+  plot_structures: true
+  facecolor: white
+  title: "HCN → HNC"
+
+  figure:
+    figsize: [8, 6]
+    dpi: 300
+    zoom_ratio: 1.0
+
+  fonts:
+    base: 12
+
+  draw_reactant:
+    x: 0.2
+    y: 0.1
+    rad: 0.15
+
+  draw_product:
+    x: 0.8
+    y: 0.1
+    rad: 0.15
+
+  draw_saddle:
+    x: 0.5
+    y: 0.6
+    rad: 0.15
+
+  ira_kmax: 14
+  aserot: 0
+#+end_src
+
+* Path Configuration
+
+** =paths=
+
+Output directory structure.
+
+*** Parameters
+
+| Parameter | Type | Default | Description |
+|-----------+------+---------+-------------|
+| =models= | string | =results/models= | ML potential storage |
+| =endpoints= | string | =results/endpoints= | Endpoint structures |
+| =neb= | string | =results/neb= | NEB outputs |
+| =idpp= | string | =results/idpp= | IDPP paths |
+| =plots= | string | =results/plots= | Visualization outputs |
+| =cache= | string | =results/cache= | Cache files |
+
+*** Example
+
+#+begin_src yaml
+paths:
+  models: results/models
+  endpoints: results/endpoints
+  neb: results/neb
+  idpp: results/idpp
+  plots: results/plots
+  cache: results/cache
+#+end_src
+
+* Complete Configuration Example
+
+#+begin_src yaml
+systems:
+  hcn_isom:
+    reactant: /data/hcn.con
+    product: /data/hnc.con
+    use_ira: true
+
+model:
+  name: pet-mad-v1.1.0
+  version: v1.1.0
+  type: pet-mad
+
+compute:
+  device: cuda
+
+alignment:
+  kmax: 1.8
+
+neb:
+  minimization:
+    max_iterations: 2000
+    converged_force: 0.0514221
+    opt_method: lbfgs
+    max_move: 0.1
+
+  optimization:
+    images: 18
+    max_iterations: 1000
+    converged_force: 0.0514221
+    energy_weighted: true
+    ew_ksp_min: 0.972
+    ew_ksp_max: 9.72
+    climbing_image_method: true
+    ci_mmf: true
+    sidpp_growth_alpha: 0.33
+
+plotting:
+  plot_structures: true
+  figure:
+    figsize: [8, 6]
+    dpi: 300
+
+paths:
+  models: results/models
+  endpoints: results/endpoints
+  neb: results/neb
+  plots: results/plots
+#+end_src

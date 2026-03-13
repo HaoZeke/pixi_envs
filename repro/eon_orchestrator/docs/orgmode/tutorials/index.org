@@ -1,0 +1,36 @@
+#+title: Tutorials
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+
+* Tutorials
+
+Hands-on tutorials for learning the NEB Orchestrator workflow.
+
+** Available Tutorials
+
+#+BEGIN_EXPORT rst
+.. toctree::
+   :maxdepth: 2
+
+   first-neb
+   custom-systems
+   parameter-tuning
+#+END_EXPORT
+
+* Tutorial Structure
+
+Each tutorial follows a consistent structure:
+
+1. *Learning Objectives*: What you will learn
+2. *Prerequisites*: Required knowledge and setup
+3. *Step-by-Step Instructions*: Detailed walkthrough
+4. *Expected Results*: What outputs to expect
+5. *Troubleshooting*: Common issues and solutions
+6. *Next Steps*: Where to go from here
+
+* Getting Help
+
+If you encounter issues:
+- Check the [[file:../reference/configuration.org][Configuration Reference]]
+- Review [[file:../devnotes.org][Developer Notes]] for known issues
+- Open an issue on [[https://github.com/epfl/eon_orchestrator/issues][GitHub]]

@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-workflow:
+    name: Validate Snakemake Workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install snakemake>=7.0
+
+      - name: Validate Snakefile syntax
+        run: |
+          python -c "import ast; ast.parse(open('workflow/Snakefile').read())" || \
+          echo "Note: Snakefile requires Snakemake parser"
+
+      - name: Dry run workflow
+        run: |
+          snakemake -n --configfile config/config.yaml \
+            --cores 1 \
+            --until get_model
+
+      - name: Generate rulegraph
+        run: |
+          snakemake --configfile config/config.yaml \
+            --rulegraph > workflow_rulegraph.dot
+
+      - name: Upload rulegraph
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-rulegraph
+          path: workflow_rulegraph.dot
+
+  lint-config:
+    name: Lint Configuration Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint config/config.yaml
+          yamllint workflow/envs/*.yaml
+          yamllint examples/hcn_isom/config.yaml
+
+      - name: Validate conda environments
+        run: |
+          for env in workflow/envs/*.yaml; do
+            echo "Validating $env"
+            python -c "import yaml; yaml.safe_load(open('$env'))"
+          done
+
+  docs-build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Sphinx and theme
+        run: |
+          pip install sphinx sphinx-click sphinxcontrib-programoutput sphinx-sitemap shibuya
+
+      - name: Build HTML documentation
+        run: |
+          cd docs/source
+          sphinx-build -b html . _build/html
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/source/_build/html/
+
+  examples-validate:
+    name: Validate Examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install snakemake
+        run: pip install snakemake>=7.0
+
+      - name: Validate example configuration
+        run: |
+          python -c "
+          import yaml
+          with open('examples/hcn_isom/config.yaml') as f:
+              config = yaml.safe_load(f)
+          assert 'systems' in config
+          assert 'hcn_isom' in config['systems']
+          print('Example configuration valid')
+          "

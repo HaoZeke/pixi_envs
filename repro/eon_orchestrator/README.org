@@ -1,0 +1,216 @@
+#+title: NEB Orchestrator
+#+author: NEB Orchestrator Team
+#+date: 2026-03-13
+#+options: toc:2 num:t
+
+#+macro: workflow NEB Orchestrator
+#+macro: version 0.1.0
+
+[[https://github.com/epfl/eon_orchestrator/actions/workflows/ci.yml][https://github.com/epfl/eon_orchestrator/actions/workflows/ci.yml/badge.svg]]
+[[https://github.com/epfl/eon_orchestrator/actions/workflows/lint.yml][https://github.com/epfl/eon_orchestrator/actions/workflows/lint.yml/badge.svg]]
+[[https://zenodo.org/badge/DOI/10.5281/zenodo.xxxxxxx.svg][https://doi.org/10.5281/zenodo.xxxxxxx]]
+[[https://opensource.org/licenses/MIT][https://img.shields.io/badge/License-MIT-yellow.svg]]
+
+* Overview
+
+{{workflow}} is a modular Snakemake workflow for automated Nudged Elastic Band (NEB)
+calculations using eOn with machine learning potentials (PET-MAD/uPET).
+
+The workflow orchestrates the complete NEB pipeline:
+1. Automatic ML potential retrieval from HuggingFace
+2. Endpoint preparation with IRA alignment and minimization
+3. CI-NEB optimization with energy-weighted springs and MMF refinement
+4. Publication-quality visualization (1D profiles, 2D landscapes)
+
+** Key Features
+
+- *Modular Design*: Each workflow stage is a separate, reusable rule module
+- *Automated Dependencies*: Conda environments per rule for reproducibility
+- *ML-Powered*: Uses PET-MAD/uPET machine learning potentials
+- *Production-Ready*: Validated on molecular isomerization reactions
+- *Extensible*: Easy to add new systems or modify parameters
+
+** System Applicability
+
+This workflow is optimized for =gas-phase molecular systems=:
+- Small to medium organic molecules (5-50 atoms)
+- Single or multiple bond breaking/forming reactions
+- Isomerization and proton transfer reactions
+
+*Note*: Surface reactions, condensed phase, or enzymatic systems require
+modifications to cell parameters and boundary conditions.
+
+* Installation
+
+** Requirements
+
+- Python 3.11+
+- Snakemake 7.0+
+- eOn client (for NEB calculations)
+- CUDA-capable GPU (recommended) or CPU
+
+** Quick Install
+
+#+begin_src bash
+# Clone the repository
+git clone https://github.com/epfl/eon_orchestrator.git
+cd eon_orchestrator
+
+# Install snakemake
+pip install snakemake>=7.0
+
+# Verify eOn client
+which eonclient
+#+end_src
+
+* Usage
+
+** Basic Workflow
+
+#+begin_src bash
+# 1. Copy and edit configuration
+cp config/config.yaml my_config.yaml
+# Edit my_config.yaml with your system paths
+
+# 2. Run the complete workflow
+snakemake --configfile my_config.yaml -c4 --use-conda
+
+# 3. Check results
+ls results/plots/*/
+#+end_src
+
+** Configuration
+
+Edit =config/config.yaml= to define:
+
+1. *Systems*: Reactant and product .con file paths
+2. *Model*: PET-MAD version (default: v1.1.0)
+3. *Compute*: Device (cuda/cpu)
+4. *NEB Parameters*: Images, convergence, springs
+
+Example minimal config:
+
+#+begin_src yaml
+systems:
+  hcn_isom:
+    reactant: /path/to/hcn.con
+    product: /path/to/hnc.con
+    use_ira: true
+
+model:
+  name: pet-mad-v1.1.0
+  version: v1.1.0
+
+compute:
+  device: cuda
+#+end_src
+
+** Workflow Targets
+
+#+begin_src bash
+# Dry run (validate DAG)
+snakemake -n --configfile my_config.yaml
+
+# Run specific system
+snakemake prepare_endpoints --wildcards system=hcn_isom --configfile my_config.yaml
+
+# Run NEB only
+snakemake run_neb_for_system --wildcards system=hcn_isom --configfile my_config.yaml
+
+# Generate plots only
+snakemake visualize_for_system --wildcards system=hcn_isom --configfile my_config.yaml
+
+# Clean outputs
+snakemake clean --configfile my_config.yaml
+#+end_src
+
+* Documentation
+
+- [[file:docs/orgmode/quickstart.org][Quickstart Guide]] - Get started in 5 minutes
+- [[file:docs/orgmode/][Full Documentation]] - Tutorials, reference, and developer notes
+- [[file:config/config.yaml][Configuration Example]] - All parameters with defaults
+
+* Workflow Structure
+
+#+begin_src
+eon_orchestrator/
+├── workflow/
+│   ├── Snakefile              # Main entry point
+│   ├── rules/
+│   │   ├── get_model.smk      # ML potential retrieval
+│   │   ├── align_endpoints.smk # IRA alignment
+│   │   ├── minimize.smk       # Endpoint minimization
+│   │   ├── generate_idpp.smk  # IDPP path (optional)
+│   │   ├── run_neb.smk        # NEB optimization
+│   │   └── visualize.smk      # Plotting
+│   └── envs/                  # Conda environments
+├── config/
+│   └── config.yaml            # Default configuration
+├── docs/
+│   └── orgmode/               # Documentation
+├── README.org
+└── LICENSE
+#+end_src
+
+* Example Results
+
+After running the workflow, outputs include:
+
+** 1D Energy Profile
+
+Energy along the reaction coordinate showing:
+- Reactant and product basins
+- Saddle point (transition state)
+- Energy barrier height
+
+** 2D RMSD Landscape
+
+Projection of the path onto structural coordinates:
+- X-axis: RMSD from reactant
+- Y-axis: RMSD from product
+- Color: Energy
+- Reveals path tortuosity and intermediates
+
+* Citing
+
+If you use {{workflow}} in your research, please cite:
+
+#+begin_quote
+[Your citation here - DOI pending]
+#+end_quote
+
+** Software Citation
+
+#+begin_src bibtex
+@software{neb_orchestrator,
+  author = {NEB Orchestrator Team},
+  title = {NEB Orchestrator: Automated NEB Workflows with ML Potentials},
+  year = {2026},
+  url = {https://github.com/epfl/eon_orchestrator},
+  doi = {10.5281/zenodo.xxxxxxx},
+}
+#+end_src
+
+* Contributing
+
+Contributions are welcome! See [[file:docs/orgmode/devnotes.org][Developer Notes]] for:
+- Development setup
+- Adding new rule modules
+- Testing guidelines
+- Code style
+
+* License
+
+MIT License - see [[file:LICENSE][LICENSE]] file for details.
+
+* Acknowledgments
+
+- eOn development team (https://github.com/TheochemUI/eOn)
+- PET-MAD authors (https://huggingface.co/lab-cosmo/pet-mad)
+- Snakemake community (https://snakemake.github.io/)
+- rgpycrumbs for alignment and visualization tools
+
+* Contact
+
+- GitHub Issues: https://github.com/epfl/eon_orchestrator/issues
+- Email: [your-email@epfl.ch]

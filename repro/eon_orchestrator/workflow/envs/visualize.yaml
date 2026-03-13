@@ -1,0 +1,11 @@
+name: neb-visualize
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - matplotlib>=3.7
+  - numpy>=1.24
+  - pandas>=2.0
+  - pip
+  - pip:
+      - rgpycrumbs>=0.1.0
