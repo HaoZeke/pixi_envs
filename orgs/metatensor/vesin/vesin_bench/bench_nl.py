@@ -27,8 +27,21 @@ from pathlib import Path
 import numpy as np
 
 try:
+    import sys
+    # Work around vesin/ directory shadowing the installed package
+    if 'vesin' in sys.modules and not hasattr(sys.modules['vesin'], 'NeighborList'):
+        del sys.modules['vesin']
     import vesin
     # Guard against the git repo dir "vesin/" shadowing the real package.
+    if not hasattr(vesin, "NeighborList"):
+        # Try to import from site-packages explicitly
+        import site
+        for path in site.getsitepackages():
+            if (Path(path) / "vesin").exists():
+                sys.path.insert(0, path)
+                import importlib
+                vesin = importlib.import_module('vesin')
+                break
     if not hasattr(vesin, "NeighborList"):
         raise ImportError(
             "Got vesin namespace package (no NeighborList). "
@@ -69,10 +82,10 @@ MD_STEPS = 200  # steps for MD trajectory benchmark
 MD_DT_DISPLACEMENT = 0.02  # RMS displacement per step (Angstrom), ~1 fs MD step
 
 
-def bench_vesin_cpu(positions, box, cutoff, full_list=True):
+def bench_vesin_cpu(positions, box, cutoff, full_list=True, skin=0.0):
     """Benchmark vesin CPU neighbor list (auto algorithm)."""
     periodic = [True, True, True]
-    nl = vesin.NeighborList(cutoff=cutoff, full_list=full_list)
+    nl = vesin.NeighborList(cutoff=cutoff, full_list=full_list, skin=skin)
 
     for _ in range(N_WARMUP):
         nl.compute(points=positions, box=box.T, periodic=periodic, quantities="ij")
@@ -87,7 +100,7 @@ def bench_vesin_cpu(positions, box, cutoff, full_list=True):
     return np.median(times), np.std(times)
 
 
-def bench_vesin_gpu(positions_np, box_np, cutoff, full_list=True):
+def bench_vesin_gpu(positions_np, box_np, cutoff, full_list=True, skin=0.0):
     """Benchmark vesin GPU (CUDA) neighbor list.
 
     Returns (None, None) if CUDA not available or vesin lacks GPU support.
@@ -98,7 +111,7 @@ def bench_vesin_gpu(positions_np, box_np, cutoff, full_list=True):
     positions_t = torch.tensor(positions_np, dtype=torch.float64, device="cuda")
     box_t = torch.tensor(box_np.T, dtype=torch.float64, device="cuda")
     periodic = [True, True, True]
-    nl = vesin.NeighborList(cutoff=cutoff, full_list=full_list)
+    nl = vesin.NeighborList(cutoff=cutoff, full_list=full_list, skin=skin)
 
     # Check if this vesin build supports GPU tensors
     try:
@@ -231,6 +244,47 @@ def bench_verlet_cpu(positions_np, box_np, cutoff, skin=1.0):
         np.median(rebuild_times), np.std(rebuild_times),
         np.median(reuse_times), np.std(reuse_times),
     )
+
+
+def bench_md_integrated_verlet(positions_np, box_np, cutoff, skin=1.0, n_steps=MD_STEPS,
+                               dt_disp=MD_DT_DISPLACEMENT):
+    """Benchmark integrated Verlet NL (via NeighborList with skin) over MD trajectory.
+
+    Uses the new integrated API: NeighborList(cutoff=X, full_list=Y, skin=Z).
+    This is the recommended approach - no separate vesin_verlet_* handle needed.
+
+    Returns (total_time_s, per_step_ms, n_rebuilds, n_reuses) or (None, ...).
+    """
+    if not HAS_VESIN:
+        return None, None, None, None
+
+    periodic = [True, True, True]
+    positions = positions_np.copy()
+    rng = np.random.default_rng(42)
+
+    # Create NeighborList with Verlet caching enabled
+    nl = vesin.NeighborList(cutoff=cutoff, full_list=True, skin=skin)
+
+    total_time = 0.0
+    n_rebuilds = 0
+    n_reuses = 0
+
+    for step in range(n_steps):
+        # Small random displacement (thermal motion)
+        positions += rng.normal(0, dt_disp, size=positions.shape)
+
+        t0 = time.perf_counter()
+        nl.compute(points=positions, box=box_np.T, periodic=periodic, quantities="ij")
+        t1 = time.perf_counter()
+        total_time += (t1 - t0)
+
+        if nl.did_rebuild():
+            n_rebuilds += 1
+        else:
+            n_reuses += 1
+
+    per_step_ms = (total_time / n_steps) * 1000
+    return total_time, per_step_ms, n_rebuilds, n_reuses
 
 
 def bench_md_stateless(positions_np, box_np, cutoff, n_steps=MD_STEPS,
@@ -423,13 +477,29 @@ def main():
             entry["n_pairs"] = int(n_pairs)
             print(f"  vesin CPU:         {med*1000:8.3f} ms  ({n_pairs} pairs)")
 
-        # vesin GPU
+        # vesin GPU (stateless)
         if HAS_VESIN and HAS_CUDA:
             med, std = bench_vesin_gpu(positions, box, CUTOFF)
             if med is not None:
                 entry["vesin_gpu_ms"] = med * 1000
                 entry["vesin_gpu_std_ms"] = std * 1000
                 print(f"  vesin GPU:         {med*1000:8.3f} ms")
+
+        # vesin CPU with integrated Verlet (skin=1.0)
+        if HAS_VESIN:
+            med, std = bench_vesin_cpu(positions, box, CUTOFF, skin=1.0)
+            if med is not None:
+                entry["vesin_cpu_verlet_ms"] = med * 1000
+                entry["vesin_cpu_verlet_std_ms"] = std * 1000
+                print(f"  vesin CPU Verlet:  {med*1000:8.3f} ms")
+
+        # vesin GPU with integrated Verlet (skin=1.0)
+        if HAS_VESIN and HAS_CUDA:
+            med, std = bench_vesin_gpu(positions, box, CUTOFF, skin=1.0)
+            if med is not None:
+                entry["vesin_gpu_verlet_ms"] = med * 1000
+                entry["vesin_gpu_verlet_std_ms"] = std * 1000
+                print(f"  vesin GPU Verlet:  {med*1000:8.3f} ms")
 
         # Verlet CPU (rebuild vs reuse)
         if HAS_VERLET:
@@ -445,7 +515,7 @@ def main():
                 print(f"  Verlet rebuild:    {r_med*1000:8.3f} ms")
                 print(f"  Verlet reuse:      {u_med*1000:8.3f} ms  ({speedup:.1f}x faster)")
 
-        # MD trajectory: stateless vs Verlet (the real comparison)
+        # MD trajectory: stateless vs integrated Verlet (the real comparison)
         if HAS_VESIN:
             t_stat, ps_stat = bench_md_stateless(positions, box, CUTOFF)
             if t_stat is not None:
@@ -454,6 +524,22 @@ def main():
                 print(f"  MD stateless:      {ps_stat:8.3f} ms/step  "
                       f"({t_stat:.3f}s total, {MD_STEPS} steps)")
 
+            # Integrated Verlet (NEW API - recommended)
+            t_vrl, ps_vrl, n_rb, n_ru = bench_md_integrated_verlet(
+                positions, box, CUTOFF, skin=1.0
+            )
+            if t_vrl is not None:
+                entry["md_integrated_verlet_total_s"] = t_vrl
+                entry["md_integrated_verlet_per_step_ms"] = ps_vrl
+                entry["md_integrated_verlet_rebuilds"] = n_rb
+                entry["md_integrated_verlet_reuses"] = n_ru
+                speedup = t_stat / t_vrl if t_stat and t_vrl > 0 else 0
+                print(f"  MD Verlet (new):   {ps_vrl:8.3f} ms/step  "
+                      f"({t_vrl:.3f}s total, {n_rb} rebuilds, {n_ru} reuses)")
+                print(f"  MD speedup:        {speedup:.1f}x  "
+                      f"(integrated Verlet vs stateless over {MD_STEPS} steps)")
+
+        # Old standalone Verlet API (for comparison)
         if HAS_VERLET:
             t_vrl, ps_vrl, n_rb, n_ru = bench_md_verlet(
                 positions, box, CUTOFF, skin=1.0
@@ -463,11 +549,6 @@ def main():
                 entry["md_verlet_per_step_ms"] = ps_vrl
                 entry["md_verlet_rebuilds"] = n_rb
                 entry["md_verlet_reuses"] = n_ru
-                speedup = t_stat / t_vrl if t_stat and t_vrl > 0 else 0
-                print(f"  MD Verlet:         {ps_vrl:8.3f} ms/step  "
-                      f"({t_vrl:.3f}s total, {n_rb} rebuilds, {n_ru} reuses)")
-                print(f"  MD speedup:        {speedup:.1f}x  "
-                      f"(Verlet vs stateless over {MD_STEPS} steps)")
 
         results["systems"].append(entry)
 
