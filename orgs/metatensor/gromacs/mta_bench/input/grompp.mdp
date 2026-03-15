@@ -13,9 +13,9 @@ nstfout                 = 0
 ; Neighbor searching
 ; ===================================================================
 cutoff-scheme           = verlet
-rlist                   = 0.45
-rcoulomb                = 0.45
-rvdw                    = 0.45
+nstlist                 = 10
+rcoulomb                = 0.9
+rvdw                    = 0.9
 pbc                     = xyz
 
 ; Electrostatics
@@ -36,4 +36,4 @@ gen-seed                = 42
 metatomic-active       = true
 metatomic-input_group  = System
 metatomic-model        = pet-mad-v1.0.2.pt
-metatomic-device       = cuda
+; metatomic-device set via GMX_METATOMIC_DEVICE env var
