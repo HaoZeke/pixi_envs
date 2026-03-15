@@ -444,10 +444,6 @@ def main() -> None:
         "--batch-size", type=int, default=8,
         help="Batch size (default: 8)",
     )
-    parser.add_argument(
-        "--output", type=str, default=None,
-        help="JSON output path for results",
-    )
     args = parser.parse_args()
 
     print("=" * 70)
@@ -481,27 +477,6 @@ def main() -> None:
         results.append(result)
 
     _print_summary(results)
-
-    if args.output:
-        import json
-
-        output = {
-            "metadata": {
-                "device": str(device),
-                "gpu": (
-                    torch.cuda.get_device_name(0)
-                    if device.type == "cuda"
-                    else "N/A"
-                ),
-                "pytorch": torch.__version__,
-                "steps": args.steps,
-                "batch_size": args.batch_size,
-            },
-            "configs": results,
-        }
-        with open(args.output, "w") as f:
-            json.dump(output, f, indent=2)
-        print(f"\nResults saved to {args.output}")
 
 
 if __name__ == "__main__":
