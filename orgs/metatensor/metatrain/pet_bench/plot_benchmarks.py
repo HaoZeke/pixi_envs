@@ -29,6 +29,7 @@ matplotlib.rcParams.update({
     "savefig.bbox": "tight",
 })
 
+# Ruhi colorscheme (Jost font + teal/coral/yellow palette)
 TEAL = "#004D40"
 CORAL = "#FF655D"
 YELLOW = "#F1DB4B"
