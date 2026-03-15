@@ -130,7 +130,8 @@ def plot_ddp_results(data: dict, output_dir: Path) -> None:
 
     x = np.arange(len(labels))
 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=(7, 5.2))
+    fig.subplots_adjust(bottom=0.22)
     bars = ax.bar(
         x, medians, 0.6,
         color=colors, edgecolor=edge_colors, linewidth=0.8,
@@ -168,11 +169,11 @@ def plot_ddp_results(data: dict, output_dir: Path) -> None:
         f"{meta.get('gpu', 'CPU')}, PyTorch {meta.get('pytorch', '?')}, "
         f"batch_size={meta.get('batch_size', '?')}",
     )
-    ax.text(
-        0.5, -0.12,
-        "Note: DDP on 1 GPU with gloo is a correctness test, not a performance target.\n"
+    fig.text(
+        0.5, 0.02,
+        "Note: DDP on 1 GPU with gloo is a correctness test, not a performance target. "
         "Multi-GPU NCCL would show near-linear scaling.",
-        transform=ax.transAxes, fontsize=8, ha="center", color="gray",
+        fontsize=8, ha="center", color="gray",
     )
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
