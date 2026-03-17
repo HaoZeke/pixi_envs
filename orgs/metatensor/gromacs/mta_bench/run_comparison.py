@@ -76,8 +76,19 @@ def run_gmx(workdir, n_mol, nsteps, gmx_bin, nranks=1, gpu=False):
     else:
         env["GMX_METATOMIC_DEVICE"] = "cpu"
 
-    cmd = [gmx_bin, "mdrun", "-ntomp", "4", "-ntmpi", str(nranks),
-           "-g", "md.log", "-pin", "off", "-nsteps", str(nsteps)]
+    # Detect if this is a real MPI binary (gmx_mpi) vs thread-MPI (gmx)
+    is_mpi = "mpi" in Path(gmx_bin).name
+
+    if is_mpi and nranks > 1:
+        cmd = ["mpirun", "--oversubscribe", "-np", str(nranks),
+               gmx_bin, "mdrun", "-ntomp", "4",
+               "-g", "md.log", "-pin", "off", "-nsteps", str(nsteps)]
+    elif is_mpi:
+        cmd = [gmx_bin, "mdrun", "-ntomp", "4",
+               "-g", "md.log", "-pin", "off", "-nsteps", str(nsteps)]
+    else:
+        cmd = [gmx_bin, "mdrun", "-ntomp", "4", "-ntmpi", str(nranks),
+               "-g", "md.log", "-pin", "off", "-nsteps", str(nsteps)]
 
     t0 = time.time()
     result = subprocess.run(cmd, cwd=workdir, env=env, capture_output=True, text=True)
@@ -87,16 +98,24 @@ def run_gmx(workdir, n_mol, nsteps, gmx_bin, nranks=1, gpu=False):
         print(f"  GROMACS FAILED: {result.stderr[-500:]}", file=sys.stderr)
         return None
 
-    # Parse timer from stderr (metatomic timer output)
+    # Parse timer from metatomic timer log (steady-state average)
     ms_per_step = wall * 1000 / nsteps
-    # Try to get more accurate from timer log
-    timer_file = workdir / "metatomic_timer.log"
-    if timer_file.exists():
-        for line in timer_file.read_text().splitlines():
-            if "calculateForces" in line:
-                m = re.search(r"avg=([\d.]+)", line)
-                if m:
-                    ms_per_step = float(m.group(1))
+    # Try per-rank timer first (real MPI), then single-rank timer
+    for tname in ["metatomic_timer_rank_0.log", "metatomic_timer.log"]:
+        timer_file = workdir / tname
+        if timer_file.exists():
+            forces_times = []
+            for line in timer_file.read_text().splitlines():
+                if "calculateForces:" in line:
+                    m = re.search(r"([\d.]+)\s*ms", line)
+                    if m:
+                        forces_times.append(float(m.group(1)))
+            if forces_times:
+                # Skip first 5 steps (JIT warmup), average the rest
+                steady = forces_times[min(5, len(forces_times)):]
+                if steady:
+                    ms_per_step = sum(steady) / len(steady)
+            break
     return ms_per_step
 
 
