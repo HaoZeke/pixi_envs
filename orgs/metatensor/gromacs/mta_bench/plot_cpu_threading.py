@@ -32,21 +32,20 @@ plt.rcParams.update({
 # 30 MD steps, steady-state average (last 10 steps)
 
 labels = [
-    "Baseline\n4 rank x 4t",
-    "Fix\n4 rank x 4t",
-    "Baseline\n1 rank x 4t",
-    "Fix\n1 rank x 4t",
+    "GMX baseline\n4 rank x 4t",
+    "GMX fix\n4 rank x 4t",
+    "GMX baseline\n1 rank x 4t",
+    "GMX fix\n1 rank x 4t",
+    "LAMMPS\n1 rank x 4t",
     "LAMMPS\n1 rank x 1t",
 ]
-# ms/step averages from benchmarks
-values = [7400, 4190, 3030, 2930, 6900]
-colors = [CORAL, TEAL, CORAL, TEAL, YELLOW]
+values = [7400, 4190, 3030, 2930, 3200, 8167]
+colors = [CORAL, TEAL, CORAL, TEAL, YELLOW, YELLOW]
 
-fig, ax = plt.subplots(figsize=(9, 5))
+fig, ax = plt.subplots(figsize=(10, 5.5))
 
 bars = ax.barh(range(len(labels)), values, color=colors, edgecolor=TEAL, linewidth=0.5)
 
-# Add value labels
 for bar, val in zip(bars, values):
     ax.text(bar.get_width() + 80, bar.get_y() + bar.get_height() / 2,
             f"{val:.0f} ms", va="center", fontsize=11, color=TEAL)
@@ -57,12 +56,17 @@ ax.set_xlabel("calculateForces (ms/step, lower is better)", fontsize=12)
 ax.set_title("CPU Inference: Threading Fix Impact\n648 atoms, PET-MAD, cosmopc5",
              fontsize=13, fontweight="bold", color=TEAL)
 
-# Add speedup annotation for the 4-rank case
-ax.annotate("1.77x faster", xy=(4190, 1), xytext=(5500, 1.5),
+# Speedup annotation for 4-rank case
+ax.annotate("1.77x faster", xy=(4190, 1), xytext=(5800, 0.4),
             fontsize=12, fontweight="bold", color=TEAL,
             arrowprops=dict(arrowstyle="->", color=TEAL, lw=1.5))
 
-ax.set_xlim(0, max(values) * 1.2)
+# Parity annotation for GROMACS fix vs LAMMPS 4t
+ax.annotate("parity", xy=(3200, 4), xytext=(4800, 3.5),
+            fontsize=11, fontstyle="italic", color=TEAL,
+            arrowprops=dict(arrowstyle="->", color=TEAL, lw=1.2))
+
+ax.set_xlim(0, max(values) * 1.18)
 ax.invert_yaxis()
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
