@@ -27,7 +27,6 @@ pytorch = ">=2.7,<2.8"
 
 [feature.cpu.pypi-dependencies]
 metatensor-torch = ">=0.7,<0.8"
-sphericart = { path = "sphericart", editable = true }
 
 [feature.cuda.dependencies]
 cuda-compiler = ">=12.9.0,<13"
@@ -37,7 +36,6 @@ cuda-version = ">=12.9,<13"
 [feature.cuda.pypi-dependencies]
 torch = ">=2.7.0, <2.8"
 metatensor-torch = ">=0.7,<0.8"
-sphericart = { path = "sphericart", editable = true }
 
 [environments]
 default = {features = ["cpu"], solve-group = "default"}
