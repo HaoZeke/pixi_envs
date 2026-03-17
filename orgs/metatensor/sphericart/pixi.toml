@@ -28,6 +28,9 @@ pytorch = ">=2.7,<2.8"
 [feature.cpu.pypi-dependencies]
 metatensor-torch = ">=0.7,<0.8"
 
+[feature.cuda.tasks]
+build-torch = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart/sphericart-torch && pip install --no-deps --no-cache --no-build-isolation .", env = { CMAKE_BUILD_PARALLEL_LEVEL = "4", SPHERICART_ARCH_NATIVE = "ON", SPHERICART_ENABLE_CUDA = "ON" }, depends-on = ["build-base"] }
+
 [feature.cuda.dependencies]
 cuda-compiler = ">=12.9.0,<13"
 cuda-libraries-dev = ">=12.9.0,<13"
