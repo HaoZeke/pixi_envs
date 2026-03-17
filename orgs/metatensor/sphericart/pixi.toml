@@ -1,0 +1,44 @@
+[workspace]
+authors = ["Rohit Goswami <rgoswami@ieee.org>"]
+channels = ["conda-forge"]
+name = "sphericart"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+build-base = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart && pip install --no-deps --no-cache --no-build-isolation .", env = { CMAKE_BUILD_PARALLEL_LEVEL = "4" } }
+build-torch = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart/sphericart-torch && pip install --no-deps --no-cache --no-build-isolation .", env = { CMAKE_BUILD_PARALLEL_LEVEL = "4", SPHERICART_ARCH_NATIVE = "ON" }, depends-on = ["build-base"] }
+test-torch = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart/sphericart-torch && python -m pytest python/tests/ -x -v", depends-on = ["build-torch"] }
+test-torch-metatensor = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart/sphericart-torch && python -m pytest python/tests/test_metatensor.py python/tests/test_metatensor_autograd.py -x -v", depends-on = ["build-torch"] }
+test-torch-autograd = { cmd = "cd $PIXI_PROJECT_ROOT/sphericart/sphericart-torch && python -m pytest python/tests/test_autograd.py python/tests/test_metatensor_autograd.py -x -v", depends-on = ["build-torch"] }
+
+[dependencies]
+cmake = ">=3.30"
+ninja = ">=1.12"
+cxx-compiler = ">=1.9"
+python = ">=3.12,<3.13"
+pip = ">=26.0,<27"
+pytest = ">=8.0"
+numpy = ">=2.0"
+sccache = ">=0.10"
+
+[feature.cpu.dependencies]
+pytorch = ">=2.7,<2.8"
+
+[feature.cpu.pypi-dependencies]
+metatensor-torch = ">=0.7,<0.8"
+sphericart = { path = "sphericart", editable = true }
+
+[feature.cuda.dependencies]
+cuda-compiler = ">=12.9.0,<13"
+cuda-libraries-dev = ">=12.9.0,<13"
+cuda-version = ">=12.9,<13"
+
+[feature.cuda.pypi-dependencies]
+torch = ">=2.7.0, <2.8"
+metatensor-torch = ">=0.7,<0.8"
+sphericart = { path = "sphericart", editable = true }
+
+[environments]
+default = {features = ["cpu"], solve-group = "default"}
+cuda = {features = ["cuda"], solve-group = "cuda"}
