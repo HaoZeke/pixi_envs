@@ -1,0 +1,45 @@
+# Reproducer: KOKKOS atoms_per_bin <= 0 crash
+#
+# Triggers the SIGFPE (pre-patch) / clean ERROR (post-patch) path
+# guarded in src/KOKKOS/npair_kokkos.cpp:NPairKokkos::build.
+#
+# Root cause: the KOKKOS package accepts
+#   package kokkos nbin/atoms/per/bin <N>
+# where N is read with utils::inumeric with no lower-bound check
+# (src/KOKKOS/kokkos.cpp). The value is copied into
+# NBinKokkos::atoms_per_bin and used as a kernel workspace
+# dimension. A zero or negative value crashes the neighbor build
+# with SIGFPE on stock LAMMPS.
+#
+# Invoke with:
+#   lmp -k on t 1 -sf kk -in in.atoms_per_bin_zero
+#
+# Expected on upstream/develop (pre-patch): SIGFPE / abort during
+# neighbor list build in the first run step.
+# Expected on fix/kokkos-nl-degenerate-guards: clean ERROR message
+# "Kokkos neighbor list bin size produced zero atoms_per_bin".
+
+units           lj
+atom_style      atomic
+boundary        p p p
+
+# Override the default atoms_per_bin to zero.
+# Must come before run so the NBinKokkos constructor picks it up.
+# nbin/atoms/per/bin requires neigh/thread on (enforced in kokkos.cpp).
+package         kokkos neigh/thread on nbin/atoms/per/bin 0
+
+lattice         fcc 0.8442
+region          box block 0 10 0 10 0 10
+create_box      1 box
+create_atoms    1 box
+mass            1 1.0
+velocity        all create 1.44 87287 loop geom
+
+pair_style      lj/cut/kk 2.5
+pair_coeff      1 1 1.0 1.0 2.5
+
+neighbor        0.3 bin
+neigh_modify    every 20 delay 0 check no
+
+fix             1 all nve/kk
+run             0

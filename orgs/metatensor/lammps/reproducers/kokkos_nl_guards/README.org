@@ -1,0 +1,86 @@
+#+title: Reproducers :: Kokkos NL degenerate-parameter guards
+#+author: Rohit Goswami
+#+filetags: :lammps:kokkos:reproducer:
+
+* Purpose
+
+Candidate inputs for the two defensive guards proposed upstream in
+=HaoZeke/lammps:fix/kokkos-nl-degenerate-guards=. The guards live in
+=src/KOKKOS/nbin_kokkos.cpp= (=mbins <= 0=) and =src/KOKKOS/npair_kokkos.cpp=
+(=atoms_per_bin <= 0=).
+
+Context: metatensor/lammps#45 review comment r2954700561 (Luthaf, "Should we
+send this upstream directly?"). The downstream PR carries these guards
+mixed with metatomic-specific logic; only the two general-purpose guards
+belong upstream.
+
+* Status :: stock LAMMPS cannot cheaply trigger the SIGFPE
+
+Empirical testing on rg.cosmolab (patch_10Sep2025-734-ga1c7f5baba,
+Kokkos CUDA, RTX 4070 Ti SUPER) with the two inputs below:
+
+| Input                   | Invocation                               | Result                                  |
+|-------------------------+------------------------------------------+-----------------------------------------|
+| =in.atoms_per_bin_zero= | =lmp -k on g 1 -sf kk -in ...=           | Completes normally, no crash            |
+| =in.mbins_zero=         | =lmp -k on g 1 -sf kk -in ...=           | Completes normally, no crash            |
+
+Root cause: =NBinKokkos::bin_atoms()= at =src/KOKKOS/nbin_kokkos.cpp:121=
+auto-grows =atoms_per_bin += 16= on overflow, so a user-supplied zero gets
+promoted to 16 on the first bin-atoms pass. Similarly, large =neigh_modify
+binsize= values larger than the shortest box dim are handled gracefully
+in =NBinStandard::setup_bins=.
+
+Conclusion: under normal stock-LAMMPS configurations these guards do not
+fire. They remain valuable because:
+
+1. =pair_metatomic= in metatensor/lammps#45 reached these paths and
+   triggered real SIGFPEs in =NPairKokkosBuildFunctorGhost= on PET-MAD-like
+   dense-system + large-cutoff setups.
+2. Other custom pair styles with their own NL estimation or that bypass
+   the auto-growth logic can reach the same degenerate states.
+3. The guards themselves are a single integer comparison each --
+   essentially free at runtime and trade a SIGFPE for a clear
+   =ERROR: Kokkos neighbor list ...= message.
+
+* Running
+
+Assuming a Kokkos-enabled =lmp= is on =PATH=. On rg.cosmolab use
+=/home/goswami/conda/envs/lmp-mta/bin/lmp= (Kokkos CUDA + OpenMP).
+
+#+begin_src sh
+# From this directory:
+lmp -k on g 1 -sf kk -in in.atoms_per_bin_zero
+lmp -k on g 1 -sf kk -in in.mbins_zero
+
+# Or via pixi tasks from orgs/metatensor/lammps/:
+pixi run repro-atoms-per-bin   # will complete without error (see Status)
+pixi run repro-mbins           # will complete without error (see Status)
+#+end_src
+
+Neither reproducer currently produces the crash on stock upstream develop;
+they are kept as historical record of what was tried and as smoke tests
+that the guard code paths do not regress under normal operation.
+
+* Rebuilding with the guard branch
+
+To compare behaviour with the patched branch on rg.cosmolab:
+
+#+begin_src sh
+# On cosmolab:
+cd /home/goswami/pixi_envs/orgs/metatensor/lammps/lammps   # or a fresh clone
+git fetch <HaoZeke remote> fix/kokkos-nl-degenerate-guards
+git checkout fix/kokkos-nl-degenerate-guards
+# Rebuild LAMMPS with -D PKG_KOKKOS=on -D Kokkos_ENABLE_CUDA=on.
+#+end_src
+
+Because the two guards only add defensive =if= checks, normal inputs
+(including the two reproducer files) should behave identically on the
+patched and unpatched builds.
+
+* See also
+
+- Branch: =HaoZeke/lammps:fix/kokkos-nl-degenerate-guards= (two commits off
+  =upstream/develop=).
+- Downstream PR: metatensor/lammps#45 (=fix/kokkos-nl-overflow=), review
+  comment r2954700561 where upstreaming was requested.
+- Obsidian drafts: =~/Git/Gitlab/obsidian-notes/Software/IssuePRs/lammps/=.

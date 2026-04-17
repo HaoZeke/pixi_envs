@@ -6,5 +6,11 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
+# Reproducers for KOKKOS NL degenerate-parameter guards.
+# NOTE: conda-forge lammps does not ship with the KOKKOS package, so these
+# tasks call whatever `lmp` is on PATH (e.g. a local Kokkos CUDA build on
+# rg.cosmolab). Build LAMMPS with -D PKG_KOKKOS=on for these to run.
+repro-atoms-per-bin = { cmd = "lmp -k on t 1 -sf kk -in in.atoms_per_bin_zero", cwd = "reproducers/kokkos_nl_guards" }
+repro-mbins = { cmd = "lmp -k on t 1 -sf kk -in in.mbins_zero", cwd = "reproducers/kokkos_nl_guards" }
 
 [dependencies]

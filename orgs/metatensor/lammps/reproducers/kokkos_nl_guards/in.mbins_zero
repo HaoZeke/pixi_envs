@@ -1,0 +1,50 @@
+# Reproducer: KOKKOS mbins <= 0 crash
+#
+# Triggers the SIGFPE (pre-patch) / clean ERROR (post-patch) path
+# guarded in src/KOKKOS/nbin_kokkos.cpp:NBinKokkos::bin_atoms_setup.
+#
+# Root cause: when the pair cutoff + skin is huge relative to the
+# simulation box, or when neigh_modify binsize is larger than the
+# shortest box dimension, NBinStandard::setup_bins computes a
+# degenerate bin grid and mbins ends up <= 0. The KOKKOS neighbor
+# list then allocates zero-sized bin views and the subsequent build
+# aborts with SIGFPE.
+#
+# Invoke with:
+#   lmp -k on t 1 -sf kk -in in.mbins_zero
+#
+# Expected on upstream/develop (pre-patch): SIGFPE / abort during
+# neighbor list setup.
+# Expected on fix/kokkos-nl-degenerate-guards: clean ERROR message
+# "Kokkos neighbor list produced zero bins".
+#
+# NOTE: This input is a best-effort reconstruction of the trigger
+# observed in metatensor/lammps#45 (dense systems with very large
+# model cutoffs, e.g. PET-MAD at ~5.5 A on small water boxes). If
+# the exact combination below does not reproduce on a given LAMMPS
+# build, tune `neigh_modify binsize` to a value larger than the
+# shortest box dimension or shrink the box further while keeping the
+# cutoff large.
+
+units           real
+atom_style      atomic
+boundary        p p p
+
+# Deliberately tiny orthogonal box.
+region          box block 0.0 5.0 0.0 5.0 0.0 5.0
+create_box      1 box
+lattice         fcc 0.8442
+create_atoms    1 region box
+mass            1 1.0
+velocity        all create 1.44 87287 loop geom
+
+# Large cutoff, small skin.
+pair_style      lj/cut/kk 2.5
+pair_coeff      1 1 1.0 1.0
+
+# Force degenerate bin geometry: binsize larger than shortest box dim.
+neighbor        0.3 bin
+neigh_modify    every 1 delay 0 check no binsize 100.0
+
+fix             1 all nve/kk
+run             0

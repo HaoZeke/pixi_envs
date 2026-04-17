@@ -1,0 +1,10 @@
+.pixi/
+# Nested git clones -- independent repos per pixi_envs convention
+easybuild-easyblocks/
+easybuild-easyconfigs/
+eessi-software-layer/
+# EB scratch areas
+eb-prefix/
+sources/
+build/
+install/

@@ -1,0 +1,48 @@
+[workspace]
+authors = ["Rohit Goswami <rgoswami@ieee.org>"]
+channels = ["conda-forge"]
+name = "eb-eon"
+platforms = ["linux-64"]
+version = "0.1.0"
+description = "EasyBuild recipes for eOn + artn-plugin + IRA + quill, aimed at EESSI 2025a."
+
+[dependencies]
+# conda-forge caps easyblocks/easyconfigs at 4.8.x while framework goes 4.9.x.
+# Install framework from conda-forge; use git clones of easyblocks and
+# easyconfigs (pinned via `pixi run setup`) so we can ride upstream main
+# and also draft recipes in-tree.
+easybuild-framework = ">=4.9.3"
+lmod = ">=8.7"
+python = ">=3.11,<3.12"  # EB 4.9.x still imports distutils (gone in 3.12)
+pip = ">=24"
+git = ">=2.44"
+gh = ">=2.60"
+
+[tasks]
+# Clone the EB easyconfigs repo as a nested working tree if not present.
+# We write .eb drafts inside ./easybuild-easyconfigs before upstreaming.
+init-ecfg = { cmd = "test -d easybuild-easyconfigs || git clone --depth 50 https://github.com/easybuilders/easybuild-easyconfigs.git" }
+init-eblocks = { cmd = "test -d easybuild-easyblocks || git clone --depth 50 https://github.com/easybuilders/easybuild-easyblocks.git" }
+init-eessi = { cmd = "test -d eessi-software-layer || git clone --depth 50 https://github.com/EESSI/software-layer.git eessi-software-layer" }
+setup = { depends-on = ["init-ecfg", "init-eblocks", "init-eessi"] }
+
+# Local EB-robot build in a scratch prefix under this workspace.
+# Each recipe draft lives under ./drafts/ until promoted upstream.
+eb-local = { cmd = "eb --robot --robot-paths=./drafts:./easybuild-easyconfigs/easybuild/easyconfigs --prefix=./eb-prefix --sourcepath=./sources --buildpath=./build --installpath=./install" }
+eb-lint  = { cmd = "eb --check-contrib" }
+eb-fetch = { cmd = "eb --fetch --sourcepath=./sources" }
+
+# Drop an unprivileged module tree into this workspace
+activate-modules = { cmd = "module use $(pwd)/install/modules/all" }
+
+[activation]
+scripts = ["activate.sh"]
+
+[activation.env]
+EASYBUILD_PREFIX = "$PIXI_PROJECT_ROOT/eb-prefix"
+EASYBUILD_SOURCEPATH = "$PIXI_PROJECT_ROOT/sources"
+EASYBUILD_BUILDPATH = "$PIXI_PROJECT_ROOT/build"
+EASYBUILD_INSTALLPATH = "$PIXI_PROJECT_ROOT/install"
+EASYBUILD_ROBOT_PATHS = "$PIXI_PROJECT_ROOT/drafts:$PIXI_PROJECT_ROOT/easybuild-easyconfigs/easybuild/easyconfigs"
+# Point EB at our git-cloned easyblocks since conda-forge caps at 4.8.1.
+EASYBUILD_INCLUDE_EASYBLOCKS = "$PIXI_PROJECT_ROOT/easybuild-easyblocks/easybuild/easyblocks/*/*.py"
