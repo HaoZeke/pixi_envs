@@ -4,10 +4,24 @@
 
 * Purpose
 
-Candidate inputs for the two defensive guards proposed upstream in
-=HaoZeke/lammps:fix/kokkos-nl-degenerate-guards=. The guards live in
-=src/KOKKOS/nbin_kokkos.cpp= (=mbins <= 0=) and =src/KOKKOS/npair_kokkos.cpp=
-(=atoms_per_bin <= 0=).
+Originally: candidate inputs for a pair of defensive guards proposed
+upstream. After tracing showed =NBinStandard::setup_bins= already floors
+=nbinx/y/z= to 1 and errors on box << cutoff, those guards were
+retracted (see verdict section in
+=~/Git/Gitlab/obsidian-notes/Software/Metatomic/KokkosNL_StockVsMetatomic_Divergence.org=).
+
+Remaining upstream fix:
+=HaoZeke/lammps:fix/kokkos-package-nbin-atoms-per-bin-validation= --
+reject zero / negative values for =package kokkos nbin/atoms/per/bin=
+at the parser in =src/KOKKOS/kokkos.cpp=. The =in.atoms_per_bin_zero=
+input below is the demonstration: pre-patch it runs to completion
+(auto-grow in =NBinKokkos::bin_atoms()= masks the invalid value);
+post-patch it aborts at input parse with /"Illegal package kokkos
+nbin/atoms/per/bin value: must be > 0"/.
+
+=in.mbins_zero= is kept as historical record of an investigation that
+concluded the state it tries to produce is not reachable on stock
+LAMMPS.
 
 Context: metatensor/lammps#45 review comment r2954700561 (Luthaf, "Should we
 send this upstream directly?"). The downstream PR carries these guards
@@ -68,8 +82,8 @@ To compare behaviour with the patched branch on rg.cosmolab:
 #+begin_src sh
 # On cosmolab:
 cd /home/goswami/pixi_envs/orgs/metatensor/lammps/lammps   # or a fresh clone
-git fetch <HaoZeke remote> fix/kokkos-nl-degenerate-guards
-git checkout fix/kokkos-nl-degenerate-guards
+git fetch <HaoZeke remote> fix/kokkos-package-nbin-atoms-per-bin-validation
+git checkout fix/kokkos-package-nbin-atoms-per-bin-validation
 # Rebuild LAMMPS with -D PKG_KOKKOS=on -D Kokkos_ENABLE_CUDA=on.
 #+end_src
 
@@ -79,7 +93,7 @@ patched and unpatched builds.
 
 * See also
 
-- Branch: =HaoZeke/lammps:fix/kokkos-nl-degenerate-guards= (two commits off
+- Branch: =HaoZeke/lammps:fix/kokkos-package-nbin-atoms-per-bin-validation= (two commits off
   =upstream/develop=).
 - Downstream PR: metatensor/lammps#45 (=fix/kokkos-nl-overflow=), review
   comment r2954700561 where upstreaming was requested.
