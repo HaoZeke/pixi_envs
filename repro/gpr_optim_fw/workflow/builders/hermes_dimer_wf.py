@@ -32,37 +32,40 @@ from workflow.firetasks import (
 
 
 DEFAULT_SOURCE = (
-    Path.home()
-    / "Git"
-    / "Github"
-    / "epfl"
-    / "pixi_envs"
-    / "repro"
-    / "gprd_zbl"
-    / "runs"
-    / "automated"
-    / "snake_runs"
+    # On elja: scripts/prepare_sella_si_inputs.py drops per-system
+    # rundirs under ~/gpr-optim-fw/inputs/hermes/{singlet,doublet}/<NNN>/
+    # with pos.con + direction.dat + displacement.con. Builder reads
+    # from there directly; no gprd_zbl/snake_runs dependency.
+    Path.home() / "gpr-optim-fw" / "inputs" / "hermes"
 )
 DEFAULT_OUT_ROOT = Path.home() / "gpr-optim-fw" / "runs" / "hermes_dimer"
 
 
+def _resolve_model_path(model_name: str) -> Path:
+    import os as _os
+    model_dir = Path(
+        _os.environ.get(
+            "PETMAD_MODEL_DIR", str(Path.home() / "gpr-optim-fw" / "models")
+        )
+    )
+    return model_dir / f"{model_name}.pt"
+
+
 def _discover_systems(
     source_root: Path,
-    rundir_name: str,
     include_doublet: bool,
     limit: int | None,
 ) -> list[tuple[str, Path, Path]]:
     """Return (system_id, pos.con, direction.dat) tuples."""
-    rundir = source_root / rundir_name
-    if not rundir.is_dir():
-        raise FileNotFoundError(f"Hermes rundir not found: {rundir}")
+    if not source_root.is_dir():
+        raise FileNotFoundError(f"Hermes source root not found: {source_root}")
 
     out = []
     spins = ["singlet"]
     if include_doublet:
         spins.append("doublet")
     for spin in spins:
-        spin_dir = rundir / spin
+        spin_dir = source_root / spin
         if not spin_dir.is_dir():
             continue
         for sys_dir in sorted(spin_dir.iterdir()):
@@ -80,19 +83,18 @@ def _discover_systems(
 def build(
     source_root: Path = DEFAULT_SOURCE,
     out_root: Path = DEFAULT_OUT_ROOT,
-    rundir_name: str = "default_run",
     model_name: str = "pet-mad-s-v1.5.0",
     include_doublet: bool = False,
     limit: int | None = None,
-    skip_baseline: bool = False,
+    skip_baseline: bool = True,
     skip_gprd: bool = False,
-    ranks: int = 8,
+    ranks: int = 32,
 ) -> Workflow:
-    systems = _discover_systems(source_root, rundir_name, include_doublet, limit)
+    systems = _discover_systems(source_root, include_doublet, limit)
     if not systems:
         raise FileNotFoundError(
-            f"No Hermes systems under {source_root / rundir_name}; "
-            "run gprd_zbl's prepare_files step first"
+            f"No Hermes systems under {source_root}; "
+            "run scripts/prepare_sella_si_inputs.py first"
         )
 
     fetch_fw = Firework(
@@ -110,7 +112,7 @@ def build(
                 reactant_con=str(pos),
                 initial_direction=str(direction),
                 out_dir=str(rundir),
-                model_path="{petmad_model_path}",
+                model_path=str(_resolve_model_path(model_name)),
             ),
             parents=[fetch_fw],
             name=f"prep-dimer-{sys_id}",
@@ -122,7 +124,7 @@ def build(
                 GprdDimerFiretask(
                     system_id=sys_id,
                     rundir=str(rundir),
-                    model_path="{petmad_model_path}",
+                    model_path=str(_resolve_model_path(model_name)),
                     ranks=ranks,
                 ),
                 parents=[prep],
@@ -180,20 +182,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_ROOT)
-    parser.add_argument("--rundir-name", default="default_run")
     parser.add_argument("--model-name", default="pet-mad-s-v1.5.0")
     parser.add_argument("--include-doublet", action="store_true")
     parser.add_argument("--limit", type=int, default=None)
-    parser.add_argument("--skip-baseline", action="store_true")
+    parser.add_argument(
+        "--skip-baseline", action="store_true", default=True,
+        help="Default true: eonclient on elja lacks metatomic. The "
+             "baseline branch is parked until that ships.",
+    )
     parser.add_argument("--skip-gprd", action="store_true")
-    parser.add_argument("--ranks", type=int, default=8)
+    parser.add_argument("--ranks", type=int, default=32)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     wf = build(
         source_root=args.source,
         out_root=args.out,
-        rundir_name=args.rundir_name,
         model_name=args.model_name,
         include_doublet=args.include_doublet,
         limit=args.limit,

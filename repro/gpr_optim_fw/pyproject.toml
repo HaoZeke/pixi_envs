@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpr_optim_fw"
+version = "0.1.0"
+description = "FireWorks-driven GP-accelerated saddle search benchmark suite for gpr_optim"
+authors = [{ name = "Rohit Goswami", email = "rog32@hi.is" }]
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["workflow*"]
+exclude = ["runs*", "results*", "config*", "scripts*", "docs*", "resources*"]

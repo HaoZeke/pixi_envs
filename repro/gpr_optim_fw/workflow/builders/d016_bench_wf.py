@@ -27,6 +27,16 @@ DEFAULT_SOURCE = (
 DEFAULT_OUT_ROOT = Path.home() / "gpr-optim-fw" / "runs" / "d016_smoke"
 
 
+def _resolve_model_path(model_name: str) -> Path:
+    import os as _os
+    model_dir = Path(
+        _os.environ.get(
+            "PETMAD_MODEL_DIR", str(Path.home() / "gpr-optim-fw" / "models")
+        )
+    )
+    return model_dir / f"{model_name}.pt"
+
+
 def build(
     source_dir: Path = DEFAULT_SOURCE,
     out_root: Path = DEFAULT_OUT_ROOT,
@@ -61,7 +71,7 @@ def build(
                 reactant_con=str(pos),
                 initial_direction=str(direction),
                 out_dir=str(rundir),
-                model_path="{petmad_model_path}",
+                model_path=str(_resolve_model_path(model_name)),
             ),
             parents=[fetch_fw],
             name=f"prep-{sys_id}",
@@ -70,7 +80,7 @@ def build(
             GprdDimerFiretask(
                 system_id=sys_id,
                 rundir=str(rundir),
-                model_path="{petmad_model_path}",
+                model_path=str(_resolve_model_path(model_name)),
                 ranks=ranks,
             ),
             parents=[prep],

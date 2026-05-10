@@ -44,6 +44,21 @@ DEFAULT_SOURCE = (
 DEFAULT_OUT_ROOT = Path.home() / "gpr-optim-fw" / "runs" / "baker_neb"
 
 
+def _resolve_model_path(model_name: str) -> Path:
+    """Compute the path PetMad will land at; fetch firetask just ensures
+    the file is there. Resolved at builder time so downstream firetasks
+    can carry a literal path string instead of relying on FW spec
+    interpolation (which is not automatic for arbitrary firetask
+    fields)."""
+    import os as _os
+    model_dir = Path(
+        _os.environ.get(
+            "PETMAD_MODEL_DIR", str(Path.home() / "gpr-optim-fw" / "models")
+        )
+    )
+    return model_dir / f"{model_name}.pt"
+
+
 def _discover_systems(source_root: Path) -> list[tuple[str, Path, Path]]:
     out = []
     for sys_dir in sorted(source_root.iterdir()):
@@ -83,8 +98,13 @@ def build(
                 reactant_con=str(reactant),
                 product_con=str(product),
                 out_dir=str(rundir),
-                model_path="{petmad_model_path}",
-                use_ira=True,
+                model_path=str(_resolve_model_path(model_name)),
+                # nebmmf_repro/eonRuns/config/general_config.yml has
+                # use_ira: False on every Baker entry -- the small
+                # gas-phase systems (HCN, HCCH, etc.) don't need
+                # permutation matching, and IRA's basis-search fails
+                # for some of them. Keep parity with that decision.
+                use_ira=False,
                 n_images=8,
             ),
             parents=[fetch_fw],
@@ -94,7 +114,14 @@ def build(
         # update_spec from FetchPetMadFiretask; FireWorks resolves these
         # tokens at task-launch time.
         run = Firework(
-            EonNebFiretask(system_id=sys_id, rundir=str(rundir)),
+            EonNebFiretask(
+                system_id=sys_id,
+                rundir=str(rundir),
+                model_path=str(_resolve_model_path(model_name)),
+                n_intermediate=8,
+                fmax=0.05,
+                steps=500,
+            ),
             parents=[prep],
             name=f"neb-{sys_id}",
         )

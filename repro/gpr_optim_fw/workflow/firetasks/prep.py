@@ -42,11 +42,20 @@ class FetchPetMadFiretask(FiretaskBase):
         target = model_dir / f"{model_name}.pt"
 
         want_sha = self.get("sha256")
-        if target.is_file() and want_sha:
-            got = _sha256_of(target)
-            if got == want_sha:
+        if target.is_file():
+            if want_sha:
+                got = _sha256_of(target)
+                if got != want_sha:
+                    target.unlink()
+                else:
+                    return FWAction(
+                        update_spec={"petmad_model_path": str(target)}
+                    )
+            else:
+                # No SHA pinning: trust the staged file. This is the path
+                # used when the model is pre-positioned by hand (no
+                # compute-node internet on most HPC sites).
                 return FWAction(update_spec={"petmad_model_path": str(target)})
-            target.unlink()
 
         # Use the metatomic-bundled helper rather than raw HF, so the network
         # path matches what eonclient + gprd will use at runtime.
@@ -192,23 +201,27 @@ class PrepareNebInputsFiretask(FiretaskBase):
         use_ira = bool(self.get("use_ira", True))
 
         if use_ira:
-            # Delegate to rgpycrumbs.cli for IRA alignment so the path matches
-            # what eon_orchestrator's align_endpoints rule produces.
-            try:
-                subprocess.run(
-                    [
-                        "python", "-m", "rgpycrumbs.cli", "align",
-                        "--reactant", str(out_dir / "reactant.con"),
-                        "--product", str(out_dir / "product.con"),
-                        "--out", str(out_dir),
-                        "--method", "ira",
-                    ],
-                    check=True,
-                )
-            except FileNotFoundError:
-                # rgpycrumbs not on PATH -- skip alignment, downstream NEB
-                # firetask will see this and bail with a clear error.
-                pass
+            # IRA alignment via the same rgpycrumbs.geom.api.alignment
+            # entry point eon_orchestrator's align_endpoints rule uses.
+            # Standardise the cell to [25, 25, 25] + center first so the
+            # potential evaluator (PET-MAD via metatomic) sees the same
+            # box geometry every system.
+            import ase.io
+            from rgpycrumbs.geom.api.alignment import (
+                IRAConfig,
+                align_structure_robust,
+            )
+
+            reactant_atm = ase.io.read(str(out_dir / "reactant.con"))
+            product_atm = ase.io.read(str(out_dir / "product.con"))
+            for atm in (reactant_atm, product_atm):
+                atm.set_cell([25, 25, 25])
+                atm.center()
+
+            cfg = IRAConfig(enabled=True, kmax=1.8)
+            aligned = align_structure_robust(reactant_atm, product_atm, cfg)
+            ase.io.write(str(out_dir / "reactant.con"), reactant_atm)
+            ase.io.write(str(out_dir / "product.con"), aligned.atoms)
 
         model_path = self["model_path"]
         config_overrides = self.get("config_overrides", {}) or {}

@@ -46,15 +46,25 @@ harvest-all = "python -m workflow.builders.harvest"
 python = ">=3.11.5,<3.13"
 pip = ">=25.1.1,<26"
 pymongo = ">=4.10,<5"
-ase = ">=3.23,<4"
+ase = ">=3.26.0,<4"
 numpy = ">=2.0,<3"
 polars = ">=1.0,<2"
 pyyaml = ">=6.0,<7"
 matplotlib = ">=3.9,<4"
+# IRA backend (Fortran-rooted, conda-forge package). rgpycrumbs's
+# alignment API uses this when present; without it the path falls
+# back to ASE_PROCRUSTES which is the wrong matching for the
+# permutation-sensitive Baker reactions.
+ira = ">=2.2,<3"
 
 [pypi-dependencies]
 fireworks = ">=2.1.3,<3"
 huggingface-hub = ">=0.26,<1"
+gpr_optim_fw = { path = ".", editable = true }
+# rgpycrumbs supplies IRA alignment (rgpycrumbs.geom.api.alignment) and
+# eOn helper writers used by the prep firetasks. Same version range as
+# eon_orchestrator + nebmmf_repro consume.
+rgpycrumbs = ">=1.6.1,<2"
 
 # We deliberately do NOT add mongodb here -- the LaunchPad mongo on elja
 # runs out of a singularity container (mongo:7), not the pixi env. See

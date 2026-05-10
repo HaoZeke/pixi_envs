@@ -3,16 +3,16 @@ _fw_q_type: SLURM
 
 # Launches one rocket per sbatch. The rocket pulls a READY firework, runs
 # rlaunch singleshot, posts the result back to LaunchPad. ntasks_per_node
-# matches the dimer/NEB benchmarks' typical GP-accelerated invocation (np=8
-# is the elja sweet spot per JCIM_strong_scaling_verification: np=8 hits ~95%
-# of the np=16 wall on d016 with no contention; np=16 plateaus due to oracle-
-# call Amdahl).
+# is 32 because the GP-accelerated runs (gprd, INLA-mode hyperparameters)
+# are the one configuration the paper compares. The lighter prep / fetch
+# / harvest firetasks waste 31 of the 32 cores but each finishes in
+# seconds, so the slot loss is bounded.
 rocket_launch: rlaunch -c /users/home/rog32/gpr-optim-fw/configs singleshot
 nodes: 1
-ntasks: 8
+ntasks: 32
 cpus_per_task: 1
 mem_per_cpu: '4G'
-walltime: '04:00:00'
+walltime: '08:00:00'
 queue: any_cpu
 account: chem-ui
 job_name: gpr_optim_fw
@@ -22,5 +22,8 @@ pre_rocket: |
   export PATH="$HOME/.pixi/envs/eon/bin:$HOME/.pixi/bin:$PATH"
   export LD_LIBRARY_PATH="$HOME/.pixi/envs/eon/lib:${LD_LIBRARY_PATH:-}"
   export FW_CONFIG_FILE=/users/home/rog32/gpr-optim-fw/configs/FW_config.yaml
-  cd /users/home/rog32/gpr-optim-fw
+  # The workflow package is editable-installed in this project's pixi env;
+  # cd into it so subprocess invocations of `python -m workflow.builders.*`
+  # resolve, and so relative paths in firetask outputs land sensibly.
+  cd /users/home/rog32/gpr_optim_fw
 post_rocket: ''
