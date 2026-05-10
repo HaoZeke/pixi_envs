@@ -17,11 +17,12 @@ version = "0.1.0"
 
 [tasks]
 
-# ---- Mongo bootstrap (elja login, apptainer) ----
-mongo-pull = "apptainer pull --force docker://mongo:7"
-mongo-up = { cmd = "bash scripts/mongo_up.sh", description = "Start mongo container, bind to $HOME/gpr-optim-fw/mongodb" }
+# ---- Mongo bootstrap (elja login, singularity/apptainer container) ----
+# scripts/mongo_up.sh handles the pull on first run; no separate task.
+mongo-up = { cmd = "bash scripts/mongo_up.sh", description = "Start auth-enabled mongo container, bind to 172.16.71.1:27018" }
 mongo-down = { cmd = "bash scripts/mongo_down.sh", description = "Stop the mongo container" }
-mongo-status = { cmd = "bash scripts/mongo_status.sh", description = "Probe mongo on localhost:27017" }
+mongo-status = { cmd = "bash scripts/mongo_status.sh", description = "Probe mongo on its bind interface" }
+launchpad-render = { cmd = "bash scripts/render_launchpad_yaml.sh", description = "Re-render my_launchpad.yaml from mongo_creds.env" }
 
 # ---- LaunchPad ----
 lpad-init = { cmd = "lpad reset --password=$(date +%Y-%m-%d)", description = "Reset LaunchPad (needs today's date as password to avoid accidents)" }
@@ -39,10 +40,12 @@ qlaunch-rapidfire = { cmd = "qlaunch rapidfire --maxjobs_block 32 --maxjobs_queu
 harvest-all = "python -m workflow.builders.harvest"
 
 [dependencies]
+# Light env -- only what the FW driver process needs. Worker firetasks shell
+# out to gprd / eonclient binaries from the gpr_optim and gprd_zbl pixi
+# envs respectively, so we do not duplicate the metatomic/torch stack here.
 python = ">=3.11.5,<3.13"
 pip = ">=25.1.1,<26"
 pymongo = ">=4.10,<5"
-mongodb = ">=7.0,<8"   # only used on the mongo-host machine; harmless on workers
 ase = ">=3.23,<4"
 numpy = ">=2.0,<3"
 polars = ">=1.0,<2"
@@ -51,32 +54,8 @@ matplotlib = ">=3.9,<4"
 
 [pypi-dependencies]
 fireworks = ">=2.1.3,<3"
-# metatomic + the eOn metatomic potential are what the eon_orchestrator pulls in.
-# We don't redeclare eOn here -- the worker invokes eonclient/gprd from the
-# corresponding pixi env (gprd_zbl's `eon` env or this project's `eongpu`/`eon`
-# feature once we wire it up).
+huggingface-hub = ">=0.26,<1"
 
-[feature.eon.dependencies]
-# Mirror gprd_zbl's eon feature so we can run eonclient locally without a
-# round-trip to the gprd_zbl checkout. Rebuilt only as needed.
-eigen = ">=3.4,<3.5"
-cmake = ">=4.0.3,<5"
-highfive = ">=2.10.1,<3"
-meson = ">=1.8.2,<2"
-ninja = ">=1.12.1,<2"
-pkgconf = ">=2.4.3,<3"
-openblas = ">=0.3.29,<0.4"
-compilers = ">=1.9.0,<2"
-gfortran = ">=13.3.0,<13.4"
-fmt = ">=11.1.4,<12"
-spdlog = ">=1.15.3,<2"
-h5py = ">=3.14.0,<4"
-
-[feature.eon.pypi-dependencies]
-metatomic-torch = "*"
-metatensor-torch = "*"
-torch = "*"
-vesin = "*"
-
-[environments]
-default = ["eon"]
+# We deliberately do NOT add mongodb here -- the LaunchPad mongo on elja
+# runs out of a singularity container (mongo:7), not the pixi env. See
+# scripts/mongo_up.sh.

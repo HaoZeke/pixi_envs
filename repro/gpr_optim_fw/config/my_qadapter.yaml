@@ -19,7 +19,8 @@ job_name: gpr_optim_fw
 logdir: /users/home/rog32/gpr-optim-fw/logs/qlaunch
 pre_rocket: |
   set -uo pipefail
-  export PATH="$HOME/.pixi/bin:$PATH"
+  export PATH="$HOME/.pixi/envs/eon/bin:$HOME/.pixi/bin:$PATH"
+  export LD_LIBRARY_PATH="$HOME/.pixi/envs/eon/lib:${LD_LIBRARY_PATH:-}"
   export FW_CONFIG_FILE=/users/home/rog32/gpr-optim-fw/configs/FW_config.yaml
   cd /users/home/rog32/gpr-optim-fw
 post_rocket: ''
