@@ -1,0 +1,9 @@
+name: elja_any_cpu
+category: ''
+query: '{}'
+env:
+  FW_CONFIG_FILE: /users/home/rog32/gpr-optim-fw/configs/FW_config.yaml
+  GPR_OPTIM_REPO: /users/home/rog32/gpr_optim
+  GPR_OPTIM_GPRD: /users/home/rog32/gpr_optim/build-scalapack-real/gprd
+  EON_REPO: /users/home/rog32/gpr_optim_fw/.pixi/envs/default
+  PETMAD_MODEL_DIR: /users/home/rog32/gpr-optim-fw/models

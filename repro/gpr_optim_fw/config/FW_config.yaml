@@ -1,0 +1,10 @@
+CONFIG_FILE_DIR: /users/home/rog32/gpr-optim-fw/configs
+LAUNCHPAD_LOC: /users/home/rog32/gpr-optim-fw/configs/my_launchpad.yaml
+QUEUEADAPTER_LOC: /users/home/rog32/gpr-optim-fw/configs/my_qadapter.yaml
+FWORKER_LOC: /users/home/rog32/gpr-optim-fw/configs/my_fworker.yaml
+ROCKET_STREAM_LOGLEVEL: INFO
+QUEUE_RETRY_ATTEMPTS: 3
+QUEUE_UPDATE_INTERVAL: 30
+QUEUE_JOBNAME_MAXLEN: 30
+WFLOCK_EXPIRATION_SECS: 300
+WFLOCK_EXPIRATION_KILL: True

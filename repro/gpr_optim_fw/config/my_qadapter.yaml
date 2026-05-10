@@ -1,0 +1,25 @@
+_fw_name: CommonAdapter
+_fw_q_type: SLURM
+
+# Launches one rocket per sbatch. The rocket pulls a READY firework, runs
+# rlaunch singleshot, posts the result back to LaunchPad. ntasks_per_node
+# matches the dimer/NEB benchmarks' typical GP-accelerated invocation (np=8
+# is the elja sweet spot per JCIM_strong_scaling_verification: np=8 hits ~95%
+# of the np=16 wall on d016 with no contention; np=16 plateaus due to oracle-
+# call Amdahl).
+rocket_launch: rlaunch -c /users/home/rog32/gpr-optim-fw/configs singleshot
+nodes: 1
+ntasks: 8
+cpus_per_task: 1
+mem_per_cpu: '4G'
+walltime: '04:00:00'
+queue: any_cpu
+account: chem-ui
+job_name: gpr_optim_fw
+logdir: /users/home/rog32/gpr-optim-fw/logs/qlaunch
+pre_rocket: |
+  set -uo pipefail
+  export PATH="$HOME/.pixi/bin:$PATH"
+  export FW_CONFIG_FILE=/users/home/rog32/gpr-optim-fw/configs/FW_config.yaml
+  cd /users/home/rog32/gpr-optim-fw
+post_rocket: ''

@@ -1,0 +1,11 @@
+host: localhost
+port: 27017
+name: gpr_optim_fw
+username: null
+password: null
+logdir: /users/home/rog32/gpr-optim-fw/logs/launchpad
+strm_lvl: INFO
+ssl: false
+authsource: null
+mongoclient_kwargs:
+  serverSelectionTimeoutMS: 30000

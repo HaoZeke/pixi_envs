@@ -1,0 +1,150 @@
+#+TITLE: gpr_optim FireWorks benchmark suite
+#+AUTHOR: Rohit Goswami
+#+DATE: <2026-05-10 Sun>
+
+* About
+
+FireWorks-driven benchmark suite for the gpr_optim paper (JCIM /
+follow-on). Three workflows on PET-MAD (metatomic):
+
+  - =d016_smoke=     :: cyclopentadienyl d016 dimer at np=1/8/16 (smoke test
+                         that the FW + qadapter + gprd + eonclient stack
+                         actually runs end-to-end on elja).
+  - =baker_neb=     :: 25-system Baker NEB (eonclient + PET-MAD), reference
+                         barriers + paths for the dimer comparison.
+  - =hermes_dimer=  :: Hermes/Sella 500-system dimer set, GP-accelerated
+                         (gprd) vs plain eOn dimer baseline. Both run with
+                         PET-MAD via metatomic; the GP version skips oracle
+                         calls when GP uncertainty is below threshold, the
+                         baseline calls PET-MAD on every dimer step.
+
+* Layout
+
+#+begin_src
+gpr_optim_fw/
+├── pixi.toml                  # fireworks + ase + metatomic env
+├── config/
+│   ├── FW_config.yaml         # points fireworks at the three configs below
+│   ├── my_launchpad.yaml.template
+│   ├── my_qadapter.yaml       # SLURM any_cpu / chem-ui
+│   └── my_fworker.yaml        # exposes GPR_OPTIM_GPRD, PETMAD_MODEL_DIR
+├── scripts/
+│   ├── mongo_up.sh            # apptainer mongo:7 on elja login
+│   ├── mongo_down.sh
+│   └── mongo_status.sh
+├── workflow/
+│   ├── firetasks/
+│   │   ├── prep.py            # FetchPetMadFiretask + Prepare{Dimer,Neb}Inputs
+│   │   ├── dimer.py           # GprdDimerFiretask + EonDimerBaselineFiretask
+│   │   ├── neb.py             # EonNebFiretask
+│   │   └── harvest.py         # HarvestDimerFiretask + HarvestNebFiretask
+│   └── builders/
+│       ├── d016_bench_wf.py   # smoke-test builder
+│       ├── baker_neb_wf.py
+│       └── hermes_dimer_wf.py
+└── readme.org
+#+end_src
+
+* Setup on elja
+
+** 1. Sync the project tree
+
+#+begin_src bash
+rsync -av --exclude='.pixi' --exclude='runs' --exclude='*.sif' \
+    ~/Git/Github/epfl/pixi_envs/repro/gpr_optim_fw/ \
+    elja:~/gpr_optim_fw/
+ssh elja 'mkdir -p ~/gpr-optim-fw/{configs,logs/{qlaunch,launchpad},mongodb/data,runs,models}'
+ssh elja 'cp ~/gpr_optim_fw/config/{FW_config,my_qadapter,my_fworker}.yaml ~/gpr-optim-fw/configs/'
+ssh elja 'cp ~/gpr_optim_fw/config/my_launchpad.yaml.template ~/gpr-optim-fw/configs/my_launchpad.yaml'
+#+end_src
+
+** 2. Stand up MongoDB
+
+#+begin_src bash
+ssh elja
+cd ~/gpr_optim_fw
+pixi run mongo-pull
+pixi run mongo-up
+pixi run mongo-status   # expect: "succeeded! Connection to elja-irhpc 27017 port"
+#+end_src
+
+** 3. Initialise the LaunchPad
+
+#+begin_src bash
+export FW_CONFIG_FILE=$HOME/gpr-optim-fw/configs/FW_config.yaml
+pixi run lpad-init    # safety: needs today's date as password
+#+end_src
+
+** 4. Smoke test (d016 cyclopentadienyl)
+
+#+begin_src bash
+# Make sure the gprd binary is built under ~/gpr_optim/build-scalapack-real/
+# (the existing elja_bench.sh path).
+cd ~/gpr_optim_fw
+pixi run python -m workflow.builders.d016_bench_wf --dry-run
+pixi run python -m workflow.builders.d016_bench_wf
+qlaunch rapidfire --maxjobs_block 4 --maxjobs_queue 4
+#+end_src
+
+Wait for the harvest fw to finish, then read
+=~/gpr-optim-fw/runs/d016_smoke/data/d016_smoke.csv=. Compare the gprd
+walls to the published numbers (np=1 ~10s, np=8 ~9.5s, np=16 ~9.2s on a
+non-contended any_cpu node).
+
+** 5. Add Baker NEB
+
+The Baker structures live in =nebmmf_repro=; that checkout must be
+reachable from the worker. Easiest path: rsync nebmmf_repro to elja
+under =~/Git/Github/epfl/pixi_envs/repro/= or pass =--source= to the
+builder pointing at the elja-side path.
+
+#+begin_src bash
+pixi run python -m workflow.builders.baker_neb_wf --source $HOME/<path>/baker
+qlaunch rapidfire
+#+end_src
+
+** 6. Add Hermes dimer (full GP vs baseline)
+
+The Hermes inputs are produced by =gprd_zbl='s prepare_files step; mirror
+that to elja first. Then:
+
+#+begin_src bash
+pixi run python -m workflow.builders.hermes_dimer_wf \
+    --source $HOME/Git/Github/epfl/pixi_envs/repro/gprd_zbl/runs/automated/snake_runs \
+    --include-doublet \
+    --ranks 8
+qlaunch rapidfire --maxjobs_block 32 --maxjobs_queue 32
+#+end_src
+
+* Worker prerequisites
+
+Each FWorker needs:
+
+  - =GPR_OPTIM_GPRD= -> gprd binary path (default
+    =~/gpr_optim/build-scalapack-real/gprd=)
+  - =PETMAD_MODEL_DIR= -> NFS-shared dir, the FetchPetMadFiretask drops
+    the model file here once per workflow.
+  - The pixi env activated so =eonclient= is on PATH for the baseline.
+  - =metatomic-torch=, =metatensor-torch=, =vesin= visible at runtime
+    (per the elja_bench.sh LD_LIBRARY_PATH dance).
+
+The =my_qadapter.yaml= =pre_rocket= block sets =FW_CONFIG_FILE= and
+=PATH=; per-suite tasks rely on the fworker env block in
+=my_fworker.yaml= for the rest.
+
+* Status
+
+  - 2026-05-10: project scaffolded. End-to-end smoke test pending --
+    needs MongoDB stood up on elja and the d016 smoke workflow run
+    once.
+  - Mongo bootstrap, FW configs, three builders, four firetasks, harvest
+    csv writer all in place. Worker side untested.
+
+* Internal references
+
+  - =Software/amsel/2026-05-10-fireworks-amsel-orchestration.org= -- the
+    pattern this suite follows (apptainer mongo, qadapter, FW config
+    layout, workflow shape).
+  - =Software/GPOptim/Elja_Bench_Infrastructure_2026_05_10.org= -- elja
+    bootstrap details (gcc_linux-64, pet-mad model fetch, salloc shape,
+    libtorch determinism fix).

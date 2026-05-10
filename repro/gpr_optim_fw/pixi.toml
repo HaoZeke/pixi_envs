@@ -1,0 +1,82 @@
+[workspace]
+authors = ["Rohit Goswami <rog32@hi.is>"]
+channels = ["conda-forge", "bioconda"]
+name = "gpr_optim_fw"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+# FireWorks-driven benchmark suite for gpr_optim's GP-accelerated saddle search
+# vs plain eOn dimer / NEB baselines, all running against PET-MAD via metatomic.
+#
+# Layout:
+#   config/           FW yaml templates (qadapter, fworker, FW_config)
+#   workflow/         firetasks/ + builders/ for the three benchmark suites
+#   scripts/          launchpad helpers, mongo bootstrap, harvest CLI
+#   resources/        Baker / Hermes structures (pulled by fetch tasks)
+#   runs/             FW-managed scratch (gitignored)
+
+[tasks]
+
+# ---- Mongo bootstrap (elja login, apptainer) ----
+mongo-pull = "apptainer pull --force docker://mongo:7"
+mongo-up = { cmd = "bash scripts/mongo_up.sh", description = "Start mongo container, bind to $HOME/gpr-optim-fw/mongodb" }
+mongo-down = { cmd = "bash scripts/mongo_down.sh", description = "Stop the mongo container" }
+mongo-status = { cmd = "bash scripts/mongo_status.sh", description = "Probe mongo on localhost:27017" }
+
+# ---- LaunchPad ----
+lpad-init = { cmd = "lpad reset --password=$(date +%Y-%m-%d)", description = "Reset LaunchPad (needs today's date as password to avoid accidents)" }
+lpad-stats = "lpad get_wflows -d more"
+
+# ---- Workflow add ----
+add-baker-neb = { cmd = "python -m workflow.builders.baker_neb_wf", description = "Build + add the Baker 25-system NEB workflow" }
+add-hermes-dimer = { cmd = "python -m workflow.builders.hermes_dimer_wf", description = "Build + add the Hermes 500-system dimer workflow (GP vs baseline)" }
+add-d016-bench = { cmd = "python -m workflow.builders.d016_bench_wf", description = "Smoke-test workflow: d016 cyclopentadienyl dimer x N rank-counts" }
+
+# ---- Launch ----
+qlaunch-rapidfire = { cmd = "qlaunch rapidfire --maxjobs_block 32 --maxjobs_queue 32", description = "Drain READY fws into elja's any_cpu queue" }
+
+# ---- Harvest ----
+harvest-all = "python -m workflow.builders.harvest"
+
+[dependencies]
+python = ">=3.11.5,<3.13"
+pip = ">=25.1.1,<26"
+pymongo = ">=4.10,<5"
+mongodb = ">=7.0,<8"   # only used on the mongo-host machine; harmless on workers
+ase = ">=3.23,<4"
+numpy = ">=2.0,<3"
+polars = ">=1.0,<2"
+pyyaml = ">=6.0,<7"
+matplotlib = ">=3.9,<4"
+
+[pypi-dependencies]
+fireworks = ">=2.1.3,<3"
+# metatomic + the eOn metatomic potential are what the eon_orchestrator pulls in.
+# We don't redeclare eOn here -- the worker invokes eonclient/gprd from the
+# corresponding pixi env (gprd_zbl's `eon` env or this project's `eongpu`/`eon`
+# feature once we wire it up).
+
+[feature.eon.dependencies]
+# Mirror gprd_zbl's eon feature so we can run eonclient locally without a
+# round-trip to the gprd_zbl checkout. Rebuilt only as needed.
+eigen = ">=3.4,<3.5"
+cmake = ">=4.0.3,<5"
+highfive = ">=2.10.1,<3"
+meson = ">=1.8.2,<2"
+ninja = ">=1.12.1,<2"
+pkgconf = ">=2.4.3,<3"
+openblas = ">=0.3.29,<0.4"
+compilers = ">=1.9.0,<2"
+gfortran = ">=13.3.0,<13.4"
+fmt = ">=11.1.4,<12"
+spdlog = ">=1.15.3,<2"
+h5py = ">=3.14.0,<4"
+
+[feature.eon.pypi-dependencies]
+metatomic-torch = "*"
+metatensor-torch = "*"
+torch = "*"
+vesin = "*"
+
+[environments]
+default = ["eon"]
