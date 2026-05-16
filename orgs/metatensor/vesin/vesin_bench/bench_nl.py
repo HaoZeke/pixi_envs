@@ -260,6 +260,9 @@ def bench_md_integrated_verlet(positions_np, box_np, cutoff, skin=1.0, n_steps=M
     # Create NeighborList with Verlet caching enabled
     nl = vesin.NeighborList(cutoff=cutoff, full_list=True, skin=skin)
 
+    did_rebuild_fn = getattr(nl, "did_rebuild", None)
+    have_rebuild = did_rebuild_fn is not None
+
     total_time = 0.0
     n_rebuilds = 0
     n_reuses = 0
@@ -273,12 +276,15 @@ def bench_md_integrated_verlet(positions_np, box_np, cutoff, skin=1.0, n_steps=M
         t1 = time.perf_counter()
         total_time += (t1 - t0)
 
-        if nl.did_rebuild():
-            n_rebuilds += 1
-        else:
-            n_reuses += 1
+        if have_rebuild:
+            if did_rebuild_fn():
+                n_rebuilds += 1
+            else:
+                n_reuses += 1
 
     per_step_ms = (total_time / n_steps) * 1000
+    if not have_rebuild:
+        return total_time, per_step_ms, None, None
     return total_time, per_step_ms, n_rebuilds, n_reuses
 
 
@@ -526,11 +532,19 @@ def main():
             if t_vrl is not None:
                 entry["md_integrated_verlet_total_s"] = t_vrl
                 entry["md_integrated_verlet_per_step_ms"] = ps_vrl
-                entry["md_integrated_verlet_rebuilds"] = n_rb
-                entry["md_integrated_verlet_reuses"] = n_ru
+                if n_rb is not None:
+                    entry["md_integrated_verlet_rebuilds"] = n_rb
+                    entry["md_integrated_verlet_reuses"] = n_ru
+                # Bridge old key names that the plot script expects.
+                entry["md_verlet_per_step_ms"] = ps_vrl
+                entry["md_verlet_total_s"] = t_vrl
+                if n_rb is not None:
+                    entry["md_verlet_rebuilds"] = n_rb
+                    entry["md_verlet_reuses"] = n_ru
                 speedup = t_stat / t_vrl if t_stat and t_vrl > 0 else 0
+                rb_str = f"{n_rb} rebuilds, {n_ru} reuses" if n_rb is not None else "rebuild stats unavailable"
                 print(f"  MD Verlet (new):   {ps_vrl:8.3f} ms/step  "
-                      f"({t_vrl:.3f}s total, {n_rb} rebuilds, {n_ru} reuses)")
+                      f"({t_vrl:.3f}s total, {rb_str})")
                 print(f"  MD speedup:        {speedup:.1f}x  "
                       f"(integrated Verlet vs stateless over {MD_STEPS} steps)")
 
