@@ -241,6 +241,62 @@ def bench_verlet_cpu(positions_np, box_np, cutoff, skin=1.0):
     )
 
 
+def bench_integrated_verlet_rebuild_reuse(positions_np, box_np, cutoff, skin=1.0):
+    """Measure rebuild vs reuse cost via the integrated NeighborList(skin=...) API.
+
+    Rebuild: a fresh NeighborList handle is created for every iteration, so the
+    first compute() rebuilds the topology from scratch.
+
+    Reuse: a single handle is used; the initial compute() rebuilds, then each
+    iteration perturbs positions by < skin/2 so subsequent calls hit the
+    cached-reuse path.
+
+    Returns (rebuild_median_s, rebuild_std_s, reuse_median_s, reuse_std_s) or
+    Nones if vesin is unavailable.
+    """
+    if not HAS_VESIN:
+        return None, None, None, None
+    periodic = [True, True, True]
+    box_t = box_np.T
+
+    # Rebuild: every call gets a fresh handle.
+    rebuild_times = []
+    for _ in range(N_WARMUP):
+        nl = vesin.NeighborList(cutoff=cutoff, full_list=True, skin=skin)
+        nl.compute(points=positions_np, box=box_t, periodic=periodic, quantities="ij")
+    for _ in range(N_ITER):
+        nl = vesin.NeighborList(cutoff=cutoff, full_list=True, skin=skin)
+        t0 = time.perf_counter()
+        nl.compute(points=positions_np, box=box_t, periodic=periodic, quantities="ij")
+        t1 = time.perf_counter()
+        rebuild_times.append(t1 - t0)
+
+    # Reuse: single handle, build once, then perturb < skin/2 each iteration.
+    nl = vesin.NeighborList(cutoff=cutoff, full_list=True, skin=skin)
+    nl.compute(points=positions_np, box=box_t, periodic=periodic, quantities="ij")
+    rng = np.random.default_rng(12345)
+    shift_amp = skin * 0.1  # well below skin/2
+    reuse_times = []
+    for _ in range(N_WARMUP):
+        pos = np.ascontiguousarray(
+            positions_np + rng.uniform(-shift_amp, shift_amp, size=positions_np.shape)
+        )
+        nl.compute(points=pos, box=box_t, periodic=periodic, quantities="ij")
+    for _ in range(N_ITER):
+        pos = np.ascontiguousarray(
+            positions_np + rng.uniform(-shift_amp, shift_amp, size=positions_np.shape)
+        )
+        t0 = time.perf_counter()
+        nl.compute(points=pos, box=box_t, periodic=periodic, quantities="ij")
+        t1 = time.perf_counter()
+        reuse_times.append(t1 - t0)
+
+    return (
+        float(np.median(rebuild_times)), float(np.std(rebuild_times)),
+        float(np.median(reuse_times)), float(np.std(reuse_times)),
+    )
+
+
 def bench_md_integrated_verlet(positions_np, box_np, cutoff, skin=1.0, n_steps=MD_STEPS,
                                dt_disp=MD_DT_DISPLACEMENT):
     """Benchmark integrated Verlet NL (via NeighborList with skin) over MD trajectory.
@@ -486,25 +542,12 @@ def main():
                 entry["vesin_gpu_std_ms"] = std * 1000
                 print(f"  vesin GPU:         {med*1000:8.3f} ms")
 
-        # vesin CPU with integrated Verlet (skin=1.0)
+        # Integrated-API Verlet rebuild vs reuse (CPU). This is the apples-to-
+        # apples Verlet measurement on branches that no longer export the
+        # standalone vesin_verlet_* C API: fresh handle = full rebuild;
+        # same handle + sub-skin perturbation = cached reuse.
         if HAS_VESIN:
-            med, std = bench_vesin_cpu(positions, box, CUTOFF, skin=1.0)
-            if med is not None:
-                entry["vesin_cpu_verlet_ms"] = med * 1000
-                entry["vesin_cpu_verlet_std_ms"] = std * 1000
-                print(f"  vesin CPU Verlet:  {med*1000:8.3f} ms")
-
-        # vesin GPU with integrated Verlet (skin=1.0)
-        if HAS_VESIN and HAS_CUDA:
-            med, std = bench_vesin_gpu(positions, box, CUTOFF, skin=1.0)
-            if med is not None:
-                entry["vesin_gpu_verlet_ms"] = med * 1000
-                entry["vesin_gpu_verlet_std_ms"] = std * 1000
-                print(f"  vesin GPU Verlet:  {med*1000:8.3f} ms")
-
-        # Verlet CPU (rebuild vs reuse)
-        if HAS_VERLET:
-            r_med, r_std, u_med, u_std = bench_verlet_cpu(
+            r_med, r_std, u_med, u_std = bench_integrated_verlet_rebuild_reuse(
                 positions, box, CUTOFF, skin=1.0
             )
             if r_med is not None:
@@ -513,8 +556,24 @@ def main():
                 entry["verlet_reuse_ms"] = u_med * 1000
                 entry["verlet_reuse_std_ms"] = u_std * 1000
                 speedup = r_med / u_med if u_med > 0 else float("inf")
-                print(f"  Verlet rebuild:    {r_med*1000:8.3f} ms")
-                print(f"  Verlet reuse:      {u_med*1000:8.3f} ms  ({speedup:.1f}x faster)")
+                print(f"  Verlet rebuild:    {r_med*1000:8.3f} ms  (fresh handle)")
+                print(f"  Verlet reuse:      {u_med*1000:8.3f} ms  ({speedup:.1f}x faster than rebuild)")
+
+        # Standalone vesin_verlet_* C API (older feature branches only).
+        if HAS_VERLET:
+            r_med, r_std, u_med, u_std = bench_verlet_cpu(
+                positions, box, CUTOFF, skin=1.0
+            )
+            if r_med is not None:
+                # Older API: prefer it over the integrated-API estimate if both
+                # ran (keys will already be set by the block above; overwrite).
+                entry["verlet_rebuild_ms"] = r_med * 1000
+                entry["verlet_rebuild_std_ms"] = r_std * 1000
+                entry["verlet_reuse_ms"] = u_med * 1000
+                entry["verlet_reuse_std_ms"] = u_std * 1000
+                speedup = r_med / u_med if u_med > 0 else float("inf")
+                print(f"  Verlet rebuild (C):{r_med*1000:8.3f} ms")
+                print(f"  Verlet reuse (C):  {u_med*1000:8.3f} ms  ({speedup:.1f}x faster)")
 
         # MD trajectory: stateless vs integrated Verlet (the real comparison)
         if HAS_VESIN:
