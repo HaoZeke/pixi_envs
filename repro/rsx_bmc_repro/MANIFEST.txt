@@ -1,0 +1,46 @@
+rsx_bmc_repro benchmark archive
+
+Purpose:
+  Reproducer package for the rsx BMC Bioinformatics benchmark and figure
+  artifacts.
+
+Primary source:
+  rsx-rs repository: https://github.com/HaoZeke/rsx-rs
+  rsx-rs release: v0.2.1
+
+Contents:
+  pixi.toml, pixi.lock
+    Reproducible command environment.
+
+  workflow/Snakefile
+    Snakemake workflow for synthetic benchmarks, literature downloads,
+    same-input RADSex comparison, Bayesian evidence summaries, and plots.
+
+  config/
+    Full and smoke workflow configurations.
+
+  profiles/cosmolab/
+    Local Snakemake profile used for the primary benchmark builder.
+
+  benchmarks/literature_datasets.tsv
+    Public BioProject/SRA accession manifest for the literature panel.
+
+  benchmarks/slurm/
+    Batch launchers used for the larger benchmark shards.
+
+  scripts/
+    rsx build, synthetic data generation, plotting, and archive packaging
+    helpers.
+
+  results/
+    Tracked benchmark CSVs, summaries, and generated figure artifacts used by
+    the paper.
+
+Excluded by design:
+  work/
+    Downloaded FASTQs, generated marker tables, and regenerated scratch
+    products. The workflow recreates these from the public accession manifest.
+
+Re-run entry points:
+  pixi run -e run snakemake --profile profiles/cosmolab --configfile config/smoke.yaml smoke
+  pixi run -e run snakemake --profile profiles/cosmolab all

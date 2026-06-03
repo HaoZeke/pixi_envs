@@ -8,7 +8,7 @@ This package follows the exact shape of other MCA/Zenodo repro entries in this c
 
 * What this reproduces
 - Synthetic RAD-seq-like timing regression suite (small/medium/large scales for process/distrib/signif/depth/freq/map/subset).
-- Literature-derived biological panel: 4 public RAD-seq datasets (danio, notothenia, plecoglossus, tinca) from the RADSex paper workflow, run at min-depth 1/2/5/10, plus medaka example. Includes timing breakdown, same-input speedup vs C++ RADSex v1.2.0, Bayesian evidence, triage, prior sensitivity, depth stability, Python bindings parity.
+- Literature-derived biological panel: 4 public RAD-seq datasets (danio, notothenia, plecoglossus, tinca) from the RADSex paper workflow, run at min-depth 1/2/5/10. Includes timing breakdown, same-input speedup vs C++ RADSex v1.2.0, Bayesian evidence, triage, prior sensitivity, depth stability, Python bindings parity.
 
 All numbers/figures in the paper come from these runs (or the tracked results CSVs).
 
@@ -18,7 +18,7 @@ cd /path/to/rsx_bmc_repro
 pixi install -e run
 # smoke (tiny matrix, fast sanity)
 pixi run -e run snakemake --profile profiles/cosmolab --configfile config/smoke.yaml all
-# full (the paper numbers; ~hours on 16C Threadripper, literature downloads first time)
+# full paper matrix; downloads the literature FASTQs on first run
 pixi run -e run snakemake --profile profiles/cosmolab all
 #+end_src
 
@@ -28,7 +28,7 @@ The archive produced by `pixi run -e run package-archive` (or scripts/package_ar
 
 * Data
 - Synthetic: generated on the fly by rules calling the vendored generate_data.py (or pre-generated in archive).
-- Literature: public SRA/BioProject accessions listed in benchmarks/literature_datasets.tsv ; downloaded by the workflow on first run (large; ~ tens of GB total for the 4 panels). The archive includes the exact FASTQ subsets + marker tables + results used for the paper.
+- Literature: public SRA/BioProject accessions listed in benchmarks/literature_datasets.tsv; downloaded by the workflow on first run. The archive carries the accession manifest, benchmark scripts, tracked result CSVs, and generated figures. The heavyweight downloaded FASTQs and regenerated marker-table workdir are intentionally excluded from the deposition tarball and are recreated by the workflow.
 
 See rsx-rs/benchmarks/literature_benchmarks.org for full biological context and the RADSex paper references.
 
@@ -41,9 +41,10 @@ pixi run -e run package-archive
 
 The tar contains:
 - the full repro tree (pixi.toml/lock, workflow, profiles, config, scripts, README, CITATION, LICENSE)
-- results/ with all CSVs, plots, per-run logs
-- benchmarks/data/ and literature inputs used
-- MANIFEST.txt with git commit of rsx, exact rsx binary provenance (or source snapshot), date, how to re-run
+- results/ with tracked CSVs and plots
+- benchmarks/literature_datasets.tsv and benchmark launchers
+- scripts to build rsx, generate synthetic inputs, package the archive, and plot results
+- MANIFEST.txt with release/source provenance and re-run entry points
 
 Extract on a machine with pixi + the matching rsx binary (or rebuild inside), cd into the tree, pixi run -e run snakemake ... to regenerate.
 
@@ -55,6 +56,4 @@ See CITATION.cff .
 Primary paper: rsx BMC Bioinformatics (in prep/submission). Cite the rsx-rs repo + this archive DOI (to be minted) + the original RADSex DOI 10.1111/1755-0998.13360 for the literature datasets.
 
 * Relation to rsx-rs
-The scripts here are adapted/copied from rsx-rs/benchmarks/ at the commit used for the paper run. The rsx binary is the one produced from that exact source (built with `cargo build --release -p rsx-cli` or from GH release for the version). See MANIFEST in the archive for the precise commit.
-
-When the rsx-rs repo is public, a future release will also publish the matching source + this repro as the canonical materials.
+The scripts here are adapted/copied from rsx-rs/benchmarks/ at the commit used for the paper run. The rsx binary is the one produced from that source (built with `cargo build --release -p rsx-cli` or from the matching release artifact). See MANIFEST.txt in the archive for release/source provenance.
