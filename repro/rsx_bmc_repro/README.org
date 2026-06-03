@@ -1,0 +1,60 @@
+#+TITLE: rsx_bmc_repro
+#+AUTHOR: Rohit Goswami
+#+OPTIONS: toc:nil
+
+Snakemake + pixi reproducibility harness for the benchmarks in the rsx BMC Bioinformatics paper ("rsx: a high-performance streaming toolkit for RAD-seq sex determination").
+
+This package follows the exact shape of other MCA/Zenodo repro entries in this collection (e.g. gprd_orchestrator, nebmmf_repro): pixi envs, profiles/<machine>/ for snakemake, workflow/Snakefile with param sweeps, smoke vs full configs, results, and archive tarball for deposition.
+
+* What this reproduces
+- Synthetic RAD-seq-like timing regression suite (small/medium/large scales for process/distrib/signif/depth/freq/map/subset).
+- Literature-derived biological panel: 4 public RAD-seq datasets (danio, notothenia, plecoglossus, tinca) from the RADSex paper workflow, run at min-depth 1/2/5/10, plus medaka example. Includes timing breakdown, same-input speedup vs C++ RADSex v1.2.0, Bayesian evidence, triage, prior sensitivity, depth stability, Python bindings parity.
+
+All numbers/figures in the paper come from these runs (or the tracked results CSVs).
+
+* Quick start (heavy builder)
+#+begin_src bash
+cd /path/to/rsx_bmc_repro
+pixi install -e run
+# smoke (tiny matrix, fast sanity)
+pixi run -e run snakemake --profile profiles/cosmolab --configfile config/smoke.yaml all
+# full (the paper numbers; ~hours on 16C Threadripper, literature downloads first time)
+pixi run -e run snakemake --profile profiles/cosmolab all
+#+end_src
+
+Outputs land in results/ (csvs, figures, logs).
+
+The archive produced by `pixi run -e run package-archive` (or scripts/package_archive.sh) is the artifact for Zenodo / Materials Cloud Archive deposition.
+
+* Data
+- Synthetic: generated on the fly by rules calling the vendored generate_data.py (or pre-generated in archive).
+- Literature: public SRA/BioProject accessions listed in benchmarks/literature_datasets.tsv ; downloaded by the workflow on first run (large; ~ tens of GB total for the 4 panels). The archive includes the exact FASTQ subsets + marker tables + results used for the paper.
+
+See rsx-rs/benchmarks/literature_benchmarks.org for full biological context and the RADSex paper references.
+
+* Archive for Zenodo/MCA
+After a successful full run on the builder profile (or equivalent 16-core machine):
+#+begin_src bash
+pixi run -e run package-archive
+# produces rsx_bmc_repro_archive_YYYYMMDD.tar.xz (or similar)
+#+end_src
+
+The tar contains:
+- the full repro tree (pixi.toml/lock, workflow, profiles, config, scripts, README, CITATION, LICENSE)
+- results/ with all CSVs, plots, per-run logs
+- benchmarks/data/ and literature inputs used
+- MANIFEST.txt with git commit of rsx, exact rsx binary provenance (or source snapshot), date, how to re-run
+
+Extract on a machine with pixi + the matching rsx binary (or rebuild inside), cd into the tree, pixi run -e run snakemake ... to regenerate.
+
+This matches the "inflate the data" + repro instructions pattern of nebmmf_repro etc.
+
+* Citation
+See CITATION.cff .
+
+Primary paper: rsx BMC Bioinformatics (in prep/submission). Cite the rsx-rs repo + this archive DOI (to be minted) + the original RADSex DOI 10.1111/1755-0998.13360 for the literature datasets.
+
+* Relation to rsx-rs
+The scripts here are adapted/copied from rsx-rs/benchmarks/ at the commit used for the paper run. The rsx binary is the one produced from that exact source (built with `cargo build --release -p rsx-cli` or from GH release for the version). See MANIFEST in the archive for the precise commit.
+
+When the rsx-rs repo is public, a future release will also publish the matching source + this repro as the canonical materials.

@@ -1,0 +1,29 @@
+# Smoke matrix for workflow validation.
+
+rsx_repo: ../rsx-rs
+rsx_bin: ../rsx-rs/target/release/rsx
+radsex_bin: radsex
+threads: 4
+download_method: ena
+work_dir: work-smoke
+literature_workdir: work-smoke/literature-workdir
+literature_manifest: benchmarks/literature_datasets.tsv
+results_dir: results
+data_dir: benchmarks/data
+
+synthetic_scales:
+  - small
+
+literature_datasets:
+  - danio_albolineatus
+
+min_depths: [5]
+
+commands:
+  - process
+  - distrib
+  - signif
+  - depth
+  - freq
+
+medaka: false

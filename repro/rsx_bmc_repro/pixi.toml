@@ -1,0 +1,32 @@
+[workspace]
+authors = ["Rohit Goswami <rgoswami@ieee.org>"]
+channels = ["conda-forge", "bioconda"]
+description = "rsx_bmc_repro: Snakemake reproducibility package for rsx BMC Bioinformatics benchmarks."
+name = "rsx_bmc_repro"
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+version = "0.2.0"
+
+[dependencies]
+rust = ">=1.85"
+python = ">=3.11"
+bc = "*"
+cmake = "*"
+compilers = ">=1.8"
+git = "*"
+make = "*"
+matplotlib-base = "*"
+pandas = ">=2.2,<3"
+pkg-config = "*"
+plotnine = "*"
+snakemake-minimal = ">=8.0"
+sra-tools = "*"
+zlib = "*"
+
+[pypi-dependencies]
+siuba = "*"
+
+[tasks]
+build-rsx = "bash scripts/build_rsx.sh"
+smoke = { cmd = "snakemake --profile profiles/cosmolab --configfile config/smoke.yaml smoke", depends-on = ["build-rsx"] }
+bench = { cmd = "snakemake --profile profiles/cosmolab --configfile config/config.yaml all", depends-on = ["build-rsx"] }
+package-archive = "bash scripts/package_archive.sh"

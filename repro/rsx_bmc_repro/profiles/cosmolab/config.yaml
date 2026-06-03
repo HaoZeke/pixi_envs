@@ -1,0 +1,40 @@
+# snakemake profile for the primary builder (16 physical cores, local executor, no Slurm).
+# The default executor is local; the scheduler caps concurrent rules by threads
+# (target machine's 16 physical cores).
+#
+# Invoke from the repo root:
+#   pixi run -e run snakemake --profile profiles/cosmolab <target>
+
+executor: local
+
+cores: 16
+local-cores: 16
+
+jobs: 16
+
+default-resources:
+  - threads=1
+  - runtime=60   # minutes
+
+resources:
+  - threads=16
+
+keep-going: true
+restart-times: 1
+rerun-incomplete: true
+latency-wait: 30
+printshellcmds: true
+verbose: false
+
+set-resources:
+  # Synthetic small/medium are fast; large depth and literature process can be heavy
+  run_synthetic:
+    threads: 8
+  run_literature_process:
+    threads: 16
+  run_literature_downstream:
+    threads: 8
+  generate_data:
+    threads: 4
+  plot:
+    threads: 2

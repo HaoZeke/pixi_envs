@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: "rsx_bmc_repro: Reproducibility package for rsx BMC Bioinformatics benchmarks (synthetic + literature RAD-seq panel)"
+message: "If you use this software or the associated data, please cite the primary paper and this archive."
+type: dataset
+authors:
+  - family-names: "Goswami"
+    given-names: "Rohit"
+    orcid: "https://orcid.org/0000-0002-5478-0679"
+  - family-names: "Goswami"
+    given-names: "Ruhila"
+repository-code: "https://github.com/HaoZeke/rsx-rs"
+license: GPL-3.0-or-later
+commit: "see MANIFEST.txt in the archive for the exact rsx-rs commit and rsx binary used for the deposited results"
+date-released: 2026-06-03
+references:
+  - type: article
+    title: "rsx: a high-performance streaming toolkit for RAD-seq sex determination"
+    authors:
+      - family-names: "Goswami"
+        given-names: "Rohit"
+      - family-names: "Goswami"
+        given-names: "Ruhila"
+    year: 2026
+    journal: "BMC Bioinformatics"
+    # doi: to-be-minted
+  - type: article
+    title: "RAD sequencing reveals sex determination systems in the genus RADSex"
+    authors:
+      - family-names: "Feron"
+        given-names: "Romain"
+    year: 2021
+    journal: "Molecular Ecology Resources"
+    doi: "10.1111/1755-0998.13360"

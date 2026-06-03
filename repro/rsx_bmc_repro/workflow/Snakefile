@@ -1,0 +1,171 @@
+configfile: "config/config.yaml"
+
+import os
+from pathlib import Path
+
+
+RESULTS = Path(config.get("results_dir", "results"))
+WORK = Path(config.get("work_dir", "work"))
+SYNTHETIC_WORK = WORK / "synthetic-data"
+LITERATURE_WORK = Path(config.get("literature_workdir", str(WORK / "literature-workdir")))
+DATASETS = config.get("literature_datasets", ["danio_albolineatus"])
+DEPTHS = [str(depth) for depth in config.get("min_depths", [5])]
+THREADS = int(config.get("threads", 16))
+DOWNLOAD_METHOD = config.get("download_method", "ena")
+LITERATURE_MANIFEST = Path(config.get("literature_manifest", "benchmarks/literature_datasets.tsv"))
+
+ROOT = Path(os.getcwd())
+RSX_REPO = Path(config.get("rsx_repo", os.environ.get("RSX_REPO", ROOT.parent / "rsx-rs"))).expanduser()
+RSX_BIN = config.get("rsx_bin", os.environ.get("RSX_BIN", str(RSX_REPO / "target/release/rsx")))
+RADSEX_BIN = config.get("radsex_bin", os.environ.get("RADSEX_BIN", "radsex"))
+
+DATASET_FLAGS = " ".join(f"--dataset {dataset}" for dataset in DATASETS)
+MIN_DEPTHS = ",".join(DEPTHS)
+
+
+localrules:
+    all,
+    smoke,
+    package_manifest,
+
+
+rule all:
+    input:
+        RESULTS / "synthetic_benchmark_results.csv",
+        RESULTS / "literature_benchmark_results.csv",
+        RESULTS / "literature_benchmark_summary.tsv",
+        RESULTS / "literature_speed_comparison.csv",
+        RESULTS / "literature_bayesian_evidence.csv",
+        RESULTS / "figures" / "literature_radsex_speedups.svg",
+        RESULTS / "MANIFEST.txt",
+
+
+rule smoke:
+    input:
+        RESULTS / "synthetic_benchmark_results.csv",
+        RESULTS / "literature_benchmark_results.csv",
+        RESULTS / "literature_benchmark_summary.tsv",
+
+
+rule synthetic_benchmarks:
+    output:
+        RESULTS / "synthetic_benchmark_results.csv",
+    params:
+        source_data=lambda wildcards: RSX_REPO / "benchmarks" / "data",
+    shell:
+        r"""
+        set -euo pipefail
+        test -x "{RSX_BIN}"
+        test -x "{RADSEX_BIN}" || command -v "{RADSEX_BIN}" >/dev/null
+        test -d "{params.source_data}"
+        mkdir -p "{SYNTHETIC_WORK}" "{RESULTS}"
+        cp -R "{params.source_data}/." "{SYNTHETIC_WORK}/"
+        BENCH_DATA="{SYNTHETIC_WORK}" \
+        BENCH_RESULTS="{RESULTS}" \
+        RSX_BIN="{RSX_BIN}" \
+        CPP_RADSEX="{RADSEX_BIN}" \
+        bash "{RSX_REPO}/benchmarks/run_benchmarks.sh"
+        mv "{RESULTS}/benchmark_results.csv" "{output}"
+        """
+
+
+rule literature_benchmarks:
+    output:
+        results=RESULTS / "literature_benchmark_results.csv",
+        summary=RESULTS / "literature_benchmark_summary.tsv",
+    shell:
+        r"""
+        set -euo pipefail
+        test -x "{RSX_BIN}"
+        mkdir -p "{LITERATURE_WORK}" "{RESULTS}"
+        python "{RSX_REPO}/benchmarks/run_literature_benchmarks.py" \
+          --manifest "{LITERATURE_MANIFEST}" \
+          --workdir "{LITERATURE_WORK}" \
+          --results "{output.results}" \
+          --summary "{output.summary}" \
+          {DATASET_FLAGS} \
+          --rsx "{RSX_BIN}" \
+          --threads {THREADS} \
+          --min-depths "{MIN_DEPTHS}" \
+          --download-method "{DOWNLOAD_METHOD}"
+        """
+
+
+rule literature_speed_comparison:
+    input:
+        RESULTS / "literature_benchmark_results.csv",
+    output:
+        RESULTS / "literature_speed_comparison.csv",
+    shell:
+        r"""
+        set -euo pipefail
+        test -x "{RSX_BIN}"
+        test -x "{RADSEX_BIN}" || command -v "{RADSEX_BIN}" >/dev/null
+        python "{RSX_REPO}/benchmarks/compare_literature_radsex.py" \
+          --workdir "{LITERATURE_WORK}" \
+          --results "{output}" \
+          {DATASET_FLAGS} \
+          --rsx "{RSX_BIN}" \
+          --radsex "{RADSEX_BIN}" \
+          --threads {THREADS} \
+          --min-depths "{MIN_DEPTHS}"
+        """
+
+
+rule literature_bayesian_evidence:
+    input:
+        RESULTS / "literature_benchmark_results.csv",
+    output:
+        RESULTS / "literature_bayesian_evidence.csv",
+    shell:
+        r"""
+        set -euo pipefail
+        python "{RSX_REPO}/benchmarks/analyze_bayesian_evidence.py" \
+          --workdir "{LITERATURE_WORK}" \
+          --results "{output}" \
+          {DATASET_FLAGS} \
+          --min-depths "{MIN_DEPTHS}"
+        """
+
+
+rule plot_literature:
+    input:
+        benchmark=RESULTS / "literature_benchmark_results.csv",
+        bayesian=RESULTS / "literature_bayesian_evidence.csv",
+        comparison=RESULTS / "literature_speed_comparison.csv",
+    output:
+        RESULTS / "figures" / "literature_radsex_speedups.svg",
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p "{RESULTS}/figures"
+        python "{RSX_REPO}/benchmarks/plot_literature_benchmarks.py" \
+          --input "{input.benchmark}" \
+          --bayesian "{input.bayesian}" \
+          --comparison "{input.comparison}" \
+          --output "{RESULTS}/figures"
+        """
+
+
+rule package_manifest:
+    input:
+        synthetic=RESULTS / "synthetic_benchmark_results.csv",
+        literature=RESULTS / "literature_benchmark_results.csv",
+        comparison=RESULTS / "literature_speed_comparison.csv",
+    output:
+        RESULTS / "MANIFEST.txt",
+    shell:
+        r"""
+        set -euo pipefail
+        {{
+          printf 'rsx_bmc_repro archive\n'
+          printf 'generated: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          printf 'rsx_repo: %s\n' "{RSX_REPO}"
+          printf 'rsx_binary: %s\n' "{RSX_BIN}"
+          printf 'radsex_binary: %s\n' "{RADSEX_BIN}"
+          printf 'literature_manifest: %s\n' "{LITERATURE_MANIFEST}"
+          printf 'synthetic_results: %s\n' "{input.synthetic}"
+          printf 'literature_results: %s\n' "{input.literature}"
+          printf 'speed_comparison: %s\n' "{input.comparison}"
+        }} > "{output}"
+        """

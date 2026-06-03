@@ -1,0 +1,34 @@
+# Full matrix for the paper benchmarks.
+
+rsx_repo: ../rsx-rs
+rsx_bin: ../rsx-rs/target/release/rsx
+radsex_bin: radsex
+threads: 16
+download_method: ena
+work_dir: work
+literature_workdir: work/literature-workdir
+literature_manifest: benchmarks/literature_datasets.tsv
+results_dir: results
+data_dir: benchmarks/data
+
+synthetic_scales:
+  - small
+  - medium
+  - large
+
+literature_datasets:
+  - danio_albolineatus
+  - notothenia_rossii
+  - plecoglossus_altivelis
+  - tinca_tinca
+
+min_depths: [1, 2, 5, 10]
+
+commands:
+  - process
+  - distrib
+  - signif
+  - depth
+  - freq
+
+medaka: false
