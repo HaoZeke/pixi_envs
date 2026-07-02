@@ -24,6 +24,26 @@ The rgpkgs suite consists of three packages:
 | chemparseplot   | Parsers and plotting for computational chemistry | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]]                    |
 | pychum          | Input file generators for computational chemistry | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]]                                |
 
+** Version coupling (1.8 suite)
+
+- ~rgpycrumbs~ 1.8+ eOn plot / stitch CLIs need ~chemparseplot>=1.8,<2~ (unit-aware
+  NEB helpers, ~stitch_neb_segments~, metadata-native CON energies via ~readcon>=0.7~).
+- Heavy / optional deps (jax, matplotlib stacks, ~readcon~, ~chemparseplot~, ASE)
+  are *not* required for a minimal ~pip install rgpycrumbs~; CLI scripts declare
+  them in PEP 723 blocks and run under ~uv~ via ~rgpycrumbs.cli~, and library code
+  uses ~ensure_import~ / ~RGPYCRUMBS_AUTO_DEPS=1~ for on-demand resolution.
+- Conda-only binaries (~ira_mod~, ~tblite~, ~ovito~) stay on pixi environments.
+
+** Install matrix (PyPI)
+
+#+BEGIN_SRC bash
+pip install "rgpycrumbs[analysis]"          # ase, scipy, readcon, chemparseplot>=1.8
+pip install "chemparseplot[plot,neb]"       # parsers + unit-aware plots
+pip install pychum                          # input generators (uses rgpycrumbs)
+# One-shot NEB visualization (isolated env):
+rgpycrumbs eon plt-neb --help
+#+END_SRC
+
 * Quick Start
 
 ** Prerequisites
@@ -104,8 +124,9 @@ pixi run -e bench asv run --quick
 
 | Environment | Purpose     | Key Dependencies              |
 |-------------+-------------+-------------------------------|
-| default     | Basic usage | rgpycrumbs, pint              |
+| default     | Basic usage | numpy, pint                   |
 | plot        | Plotting features | matplotlib, cmcrameri   |
+| neb         | eOn CON trajectories | ase, polars, readcon>=0.7, h5py |
 | docs        | Documentation | sphinx, shibuya             |
 
 *** Usage Examples
