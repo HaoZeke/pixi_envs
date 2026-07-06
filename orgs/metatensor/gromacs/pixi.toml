@@ -97,12 +97,19 @@ metatomic-cuda = {features = ["metatomic", "pybase", "cuda"]}
 metatomic-cpu = {features = ["metatomic", "pybase", "cpu"]}
 feedstock = {features = ["feedstock"]}
 
+# Prefer conda-forge for torch so CI does not depend on download-r2.pytorch.org
+# (TLS HandshakeFailure on GHA when resolving torch wheels / lj-test build-system).
 [feature.metatomic.pypi-dependencies]
 vesin = ">=0.4.2, <0.6"
 vesin-torch = ">=0.5.2, <0.6"
 metatomic-torch = ">=0.1.15, <0.2"
 metatensor-torch = ">=0.10.0, <0.11"
 metatomic-lj-test = { git = "https://github.com/metatensor/lj-test" }
+
+# Build pypi sdists (notably metatomic-lj-test) against the env's conda torch
+# instead of isolated resolution via download-r2.pytorch.org (GHA TLS failures).
+[feature.metatomic.pypi-options]
+no-build-isolation = true
 
 [feature.cuda.activation]
 env = { GMX_BUILD_SUFFIX = "cuda", GMX_GPU_DEVICE = "CUDA", GMX_CUDA_ARCH = "80", CUDAARCHS = "80", TORCH_CUDA_ARCH_LIST = "8.0" }
@@ -118,11 +125,9 @@ cuda-version = ">=13.0,<14"
 [feature.cpu.activation]
 env = { GMX_BUILD_SUFFIX = "cpu", GMX_GPU_DEVICE = "OFF", GMX_CUDA_ARCH = "" }
 
-[feature.cpu.pypi-options]
-extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
-
-[feature.cpu.pypi-dependencies]
-torch = ">=2.10.0, <2.11"
+# CPU torch from conda-forge (not the PyTorch wheel index / R2 CDN).
+[feature.cpu.dependencies]
+pytorch = ">=2.6,<3"
 
 [feature.metatomic.dependencies]
 mkl = ">=2025.2.0,<2026"
