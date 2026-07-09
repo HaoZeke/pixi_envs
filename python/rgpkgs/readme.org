@@ -4,217 +4,224 @@
 
 * About
 
-This directory provides [[https://pixi.sh][pixi]] development environments for the rgpkgs ecosystem -
-a suite of Python packages for computational chemistry.
+This directory provides [[https://pixi.sh][pixi]] development environments for the *rgpkgs*
+suite — Python packages for computational chemistry — kept *out-of-tree* from
+the git remotes so env matrices do not pollute source repos.
 
-The out-of-tree approach keeps environment configurations separate from
-the actual source repositories:
-- Multiple Python and version combinations without polluting project repos
-- Clean separation of concerns (env config vs source code)
-- Easy remote synchronization via mutagen
-- Feature-based modular environment definitions
+* Ecosystem architecture
 
-* Ecosystem Overview
+** Packages
 
-The rgpkgs suite consists of three packages:
+| Package | Role | Repository |
+|---------+------+------------|
+| *rgpycrumbs* | *Hub*: basetypes, surfaces/geom, ~ensure_import~, lock/config, *CLI dispatcher* | [[https://github.com/HaoZeke/rgpycrumbs][HaoZeke/rgpycrumbs]] |
+| *chemparseplot* | *Library*: parsers + plot primitives (NEB/min/saddle, strips, themes) | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]] |
+| *pychum* | *Library*: input generators (ORCA, eOn templates) | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]] |
 
-| Package         | Role                                          | Repository                                      |
-|-----------------+-----------------------------------------------+-------------------------------------------------|
-| rgpycrumbs      | Core computational library and CLI dispatcher | [[https://github.com/HaoZeke/rgpycrumbs][HaoZeke/rgpycrumbs]]                           |
-| chemparseplot   | Parsers and plotting for computational chemistry | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]]                    |
-| pychum          | Input file generators for computational chemistry | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]]                                |
+External peers: *readcon* (CON I/O, ≥0.13 for eOn 2.16), *ira* / ~ira_mod~ (conda),
+*eb-stack* (EasyBuild lock + CycloneDX produce; not a Python package here).
 
-** Version coupling (1.8 suite)
-
-- ~rgpycrumbs~ 1.8+ eOn plot / stitch CLIs need ~chemparseplot>=1.8,<2~ (unit-aware
-  NEB helpers, ~stitch_neb_segments~, metadata-native CON energies via ~readcon>=0.7~).
-- Heavy / optional deps (jax, matplotlib stacks, ~readcon~, ~chemparseplot~, ASE)
-  are *not* required for a minimal ~pip install rgpycrumbs~; CLI scripts declare
-  them in PEP 723 blocks and run under ~uv~ via ~rgpycrumbs.cli~, and library code
-  uses ~ensure_import~ / ~RGPYCRUMBS_AUTO_DEPS=1~ for on-demand resolution.
-- Conda-only binaries (~ira_mod~, ~tblite~, ~ovito~) stay on pixi environments.
-
-** Install matrix (PyPI)
-
-#+BEGIN_SRC bash
-pip install "rgpycrumbs[analysis]"          # ase, scipy, readcon, chemparseplot>=1.8
-pip install "chemparseplot[plot,neb]"       # parsers + unit-aware plots
-pip install pychum                          # input generators (uses rgpycrumbs)
-# One-shot NEB visualization (isolated env):
-rgpycrumbs eon plt-neb --help
+#+BEGIN_SRC
+                    cookbook / eOn / users
+                           |
+           prefer: library API when present
+           today:  rgpycrumbs CLI for full plot pipelines
+           +-------+-------+-------+
+           v       v       v
+    rgpycrumbs  chemparseplot  pychum
+    hub+CLI     parse+plot     inputs
+         \         |          /
+          \        v         /
+           ensure_import / basetypes
+                    |
+         ~/.config/rgpkgs + rgpkgs.toml
+         uv.lock | pylock.toml | CycloneDX
 #+END_SRC
 
-* Quick Start
+** Design principles
+
+1. *rgpycrumbs is the hub* for CLI, ~ensure_import~, lock consume, suite TOML.
+2. *chemparseplot* stays a library (no second CLI hub, no ~./config/chemparseplot~).
+3. *One pin/lock policy* for the whole suite (~rgpkgs.toml~, ~RGPKGS_*~).
+4. *Hub has no runtime feature extras*; heavies resolve via PEP 723 + uv or AUTO_DEPS.
+5. *chemparseplot extras* (~plot~, ~neb~, …) are *transitional install convenience* —
+   target is the *same uv / ensure_import design* as the hub (drop host extras over
+   time; scripts/tools pull deps on demand). Prefer bare ~pip install chemparseplot~
+   + suite pins / uv for new work.
+6. *Host envs stay lean* (cookbook): bare hub + job hosts (eon, readcon, torch…),
+   not jax/adjustText/chemparseplot “because plots”.
+7. *Formal stack SBOM* is produced by eb-stack (or ~uv export~); hub *consumes*
+   locks/SBOM, does not invent EasyBuild inventory.
+
+** Library API vs CLI (cookbook and notebooks)
+
+*Target:* notebooks prefer the *library API* —
+~chemparseplot.plot.neb~ / ~chemparseplot.parse…~ and ~rgpycrumbs~ basetypes/surfaces —
+so figures and data stay in-process.
+
+*Today:* the full eOn plot *pipeline* (history aggregation, landscape GP, structure
+strips, CLI flags) still lives primarily behind ~rgpycrumbs eon plt-*~ PEP 723
+scripts. Cookbook therefore dispatches the CLI with ~RGPKGS_FORCE_UV=1~ (or
+~RGPYCRUMBS_FORCE_UV~) until those pipelines are exposed as stable library
+entrypoints. That is a *product gap*, not the preferred long-term shape.
+
+When promoting a plot path to library-first:
+
+1. Stable function on chemparseplot (or thin rgpycrumbs wrapper).
+2. CLI becomes a thin flag→kwargs layer over that function.
+3. Cookbook switches to the function call; keep FORCE_UV only if still subprocessing.
+
+** Dependency resolution matrix
+
+| Context | Mechanism |
+|---------+-----------|
+| ~rgpycrumbs eon plt-*~ | Dispatch: uv + PEP 723 ± suite lock constraints; or in-env + ensure_import |
+| ~import chemparseplot…~ | Host has deps *or* soft import; heavies ideally via hub ensure_import later |
+| ~import rgpycrumbs.surfaces~ | ~ensure_import("jax")~ + AUTO_DEPS / suite pins |
+| Cookbook CI | Lean env + FORCE_UV + bare ~rgpycrumbs~ + ~readcon~ |
+| Site-wide pins | ~/~/.config/rgpkgs/config.toml~ → ~pins.lock~ / ~pins.packages~ |
+| HPC EasyBuild | eb-stack CycloneDX/lock → ~RGPKGS_LOCK~ (non-PyPI rows skipped) |
+
+** Suite config (one tree for all packages)
+
+| Layer | Path |
+|-------+------|
+| User | ~/~/.config/rgpkgs/config.toml~ |
+| Project | ~rgpkgs.toml~ / ~.rgpkgs.toml~ (walk up from CWD) |
+| Env | ~RGPKGS_CONFIG~, ~RGPKGS_LOCK~, ~RGPKGS_FORCE_UV~, ~RGPKGS_AUTO_DEPS~ |
+| Legacy | ~rgpycrumbs.toml~, ~/~/.config/rgpycrumbs/~, ~RGPYCRUMBS_*~ still load |
+
+Precedence: *CLI → env → project TOML → user TOML → defaults*.
+
+Shared schema (excerpt; full example in
+~rgpycrumbs/docs/examples/rgpkgs.config.toml~):
+
+#+BEGIN_SRC toml
+[pins]
+lock = "uv.lock"              # or pylock.toml / CycloneDX JSON
+
+[pins.packages]
+jax = "0.4.31"
+
+[rgpycrumbs.dispatch]
+auto_deps = true
+force_uv = false
+
+# later: [chemparseplot.plot] …
+#+END_SRC
+
+chemparseplot and pychum *must not* invent parallel XDG trees; they import
+~rgpycrumbs.config~ / ~rgpycrumbs.locks~ when they need pins.
+
+** Version floors (suite table)
+
+| Consumer | Floor |
+|----------+-------|
+| rgpycrumbs eOn CLI (PEP 723) | ~chemparseplot[neb,plot]>=1.9.7,<2~, ~readcon>=0.13.1~, ~rgpycrumbs>=1.9.13~ in script headers |
+| chemparseplot ~neb~ extra (while it remains) | ~readcon>=0.13.1~ |
+| pychum | ~rgpycrumbs>=1.9.16~ |
+| Cookbook hub pin | ~rgpycrumbs>=1.9.16~ (bare, no extras) |
+
+Release train: ship chemparseplot plot API changes first; bump rgpycrumbs PEP 723
+floors in the same window; bump pychum only when it needs new hub APIs.
+
+** Install matrix (current)
+
+#+BEGIN_SRC bash
+pip install rgpycrumbs                 # hub only — no runtime feature extras
+pip install chemparseplot              # prefer bare; use suite pins / uv for plot stacks
+# transitional, while extras remain:
+pip install "chemparseplot[plot,neb]"  # library convenience only — not a pin system
+pip install pychum                     # needs rgpycrumbs>=1.9.16
+
+# Preferred one-shot NEB visualization (isolated uv env via dispatcher):
+rgpycrumbs eon plt-neb --help
+export RGPKGS_FORCE_UV=1
+export RGPKGS_LOCK=./uv.lock           # optional
+#+END_SRC
+
+Do *not* ~pip install "rgpycrumbs[analysis]"~ — that extra was removed (1.9.12+).
+
+* Quick start (this directory)
 
 ** Prerequisites
 
-- [[https://pixi.sh][pixi]] for environment management
-- [[https://docs.astral.sh/uv/][uv]] for standard development (faster, PyPI-only)
+- [[https://pixi.sh][pixi]] for conda-only stacks
+- [[https://docs.astral.sh/uv/][uv]] for PyPI-first development (required for CLI dispatch)
 
-** Setup Workflow
+** Setup
 
 #+BEGIN_SRC bash
-# Navigate to the rgpkgs directory
 cd /path/to/pixi_envs/python/rgpkgs/
-
-# Clone the package repositories
 git clone https://github.com/HaoZeke/rgpycrumbs.git
 git clone https://github.com/HaoZeke/chemparseplot.git
 git clone https://github.com/HaoZeke/pychum.git
 
-# Enter a package directory
 cd rgpycrumbs
-
-# Standard development with uv (recommended for most work)
 uv sync --extra test
 uv run pytest -m pure
-
-# Or use pixi for conda-only dependencies
-pixi install
 #+END_SRC
 
-* Package-Specific Workflows
+* Package-specific workflows
 
 ** rgpycrumbs
 
-*** Environments
-
-| Environment | Purpose                  | Key Dependencies                  |
-|-------------+-------------------------+-----------------------------------|
-| test        | Pure testing            | pytest, numpy, scipy              |
-| surfaces    | JAX surface fitting     | jax, jaxlib                       |
-| fragments   | Fragment analysis       | tblite, ira, pyvista (conda)      |
-| eonmlflow   | eOn and MLflow          | eon, mlflow                       |
-| ptm         | OVito PTM               | ovito (conda)                     |
-| bench       | ASV benchmarking        | asv, jax                          |
-| docs        | Sphinx documentation    | sphinx, sphinx-autoapi, emacs     |
-
-*** Usage Examples
+| Environment | Purpose | Key deps |
+|-------------+---------+----------|
+| test | Pure tests | pytest |
+| surfaces | JAX surfaces | jax (pixi) |
+| fragments | Fragment analysis | tblite, ira (conda) |
+| eonmlflow | eOn + MLflow | eon, mlflow |
+| docs | Sphinx | sphinx, emacs |
 
 #+BEGIN_SRC bash
 cd rgpycrumbs
-
-# Pure tests (no heavy dependencies)
 uv run pytest -m pure
-
-# Surface fitting tests (needs JAX)
-uv sync --extra surfaces
-uv run pytest -m surfaces
-
-# Fragment tests (needs conda packages)
-pixi run -e fragments pytest -m fragments
-
-# Build documentation
 pixi run -e docs docbld
-
-# Run benchmarks
-pixi run -e bench asv run --quick
+rgpycrumbs --verbose eon plt-neb --help
 #+END_SRC
-
-*** Key Features
-
-- CLI Dispatcher: PEP 723 metadata for isolated script execution
-- Dynamic Dependencies: 5-step priority chain with CUDA-aware resolution
-- Lazy Loading: Heavy deps (JAX, SciPy, ASE) load on first use
-- ASV Benchmarks: Performance tracking with asv-perch CI integration
 
 ** chemparseplot
 
-*** Environments
-
-| Environment | Purpose     | Key Dependencies              |
-|-------------+-------------+-------------------------------|
-| default     | Basic usage | numpy, pint                   |
-| plot        | Plotting features | matplotlib, cmcrameri   |
-| neb         | eOn CON trajectories | ase, polars, readcon>=0.7, h5py |
-| docs        | Documentation | sphinx, shibuya             |
-
-*** Usage Examples
+Library-first. Prefer bare install + suite config for pins. Extras remain only as
+transitional convenience until plot deps fully follow the hub uv design.
 
 #+BEGIN_SRC bash
 cd chemparseplot
-
-# Basic usage
 uv sync
-uv run python -c "import chemparseplot"
-
-# With plotting
-uv sync --extra plot
-
-# Build docs
-pixi run -e docs docbld
+uv run pytest
+# transitional:
+uv sync --extra plot --extra neb
 #+END_SRC
 
 ** pychum
 
-*** Environments
-
-| Environment | Purpose     | Key Dependencies              |
-|-------------+-------------+-------------------------------|
-| default     | Basic usage | rgpycrumbs, ase               |
-| orca        | ORCA inputs | rgpycrumbs, ase, orca (opt)   |
-| docs        | Documentation | sphinx, shibuya             |
-
-*** Usage Examples
-
 #+BEGIN_SRC bash
 cd pychum
-
-# Basic usage
 uv sync
 uv run python -c "import pychum"
-
-# Generate ORCA input
-uv run python -c "from pychum import orca; print(orca.generate_template())"
-
-# Build docs
-pixi run -e docs docbld
 #+END_SRC
 
-* Development Guidelines
+* Cookbook / host env contract
 
-** Tool Choice: uv vs pixi
-
-Use uv for:
-- Standard Python development
-- PyPI-only dependencies
-- Faster sync times
-- Test running and linting
-
-Use pixi for:
-- Conda package dependencies (ovito, tblite, etc.)
-- Cross-platform reproducibility
-- Feature-based environment selection
-
-** Testing
-
-#+BEGIN_SRC bash
-# Run all tests for a package
-cd rgpycrumbs
-uv run pytest
-
-# Run specific test categories
-uv run pytest -m pure      # No heavy dependencies
-uv run pytest -m surfaces  # JAX required
-uv run pytest -m fragments # Conda packages required
-
-# Run tutorial tests
-cd python/rgpkgs
-uv run python tests/tutorials/test_pychum_tutorial.py
+#+BEGIN_SRC yaml
+# examples/*/environment.yml pattern
+dependencies:
+  - uv
+  - pip:
+    - readcon>=0.13.1      # notebook CON only
+    - rgpycrumbs>=1.9.16   # bare hub
+    # not: chemparseplot, jax, adjustText as plot host pins
 #+END_SRC
 
-** Documentation
-
-#+BEGIN_SRC bash
-# Build docs for a package
-cd rgpycrumbs
-pixi run -e docs docbld
-
-# Or with uv (if docs env already installed)
-uv run sphinx-build -b html docs/source docs/build
+#+BEGIN_SRC python
+import os
+os.environ.setdefault("RGPKGS_FORCE_UV", "1")
+# optional: os.environ.setdefault("RGPKGS_LOCK", "uv.lock")
 #+END_SRC
 
-* Related Documentation
+* Related
 
+- Suite architecture notes also under ~rgpycrumbs/docs/orgmode/explanation/suite_architecture.org~
+- Example suite config: ~rgpycrumbs/docs/examples/rgpkgs.config.toml~
 - [[file:../../readme.org][pixi_envs main documentation]]
-- [[file:../..][pixi_envs root]] - Other out-of-tree environments
