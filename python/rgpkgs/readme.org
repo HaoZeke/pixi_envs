@@ -18,7 +18,7 @@ the git remotes so env matrices do not pollute source repos.
 | *chemparseplot* | *Library*: parsers + plot primitives (NEB/min/saddle, strips, themes) | [[https://github.com/HaoZeke/chemparseplot][HaoZeke/chemparseplot]] |
 | *pychum* | *Library*: input generators (ORCA, eOn templates) | [[https://github.com/HaoZeke/pychum][HaoZeke/pychum]] |
 
-External peers: *readcon* (CON I/O, ≥0.13 for eOn 2.16), *ira* / ~ira_mod~ (conda),
+External peers: *readcon* (CON I/O, ≥0.14.7 for current eOn CON spec 3), *ira* / ~ira_mod~ (conda),
 *eb-stack* (EasyBuild lock + CycloneDX produce; not a Python package here).
 
 #+BEGIN_SRC
@@ -117,10 +117,10 @@ chemparseplot and pychum *must not* invent parallel XDG trees; they import
 
 | Consumer | Floor |
 |----------+-------|
-| rgpycrumbs eOn CLI (PEP 723) | ~chemparseplot[neb,plot]>=1.9.7,<2~, ~readcon>=0.13.1~, ~rgpycrumbs>=1.9.13~ in script headers |
-| chemparseplot ~neb~ extra (while it remains) | ~readcon>=0.13.1~ |
-| pychum | ~rgpycrumbs>=1.9.16~ |
-| Cookbook hub pin | ~rgpycrumbs>=1.9.16~ (bare, no extras) |
+| rgpycrumbs eOn CLI (PEP 723) | ~chemparseplot[neb,plot]>=1.9.17,<2~, ~readcon>=0.14.7~, ~rgpycrumbs>=1.10.4~ in script headers |
+| chemparseplot ~neb~ extra (while it remains) | ~readcon>=0.14.7~ |
+| pychum | ~rgpycrumbs>=1.10.4~ |
+| Cookbook hub pin | ~rgpycrumbs>=1.10.4~ (bare, no extras) |
 
 Release train: ship chemparseplot plot API changes first; bump rgpycrumbs PEP 723
 floors in the same window; bump pychum only when it needs new hub APIs.
@@ -132,7 +132,7 @@ pip install rgpycrumbs                 # hub only — no runtime feature extras
 pip install chemparseplot              # prefer bare; use suite pins / uv for plot stacks
 # transitional, while extras remain:
 pip install "chemparseplot[plot,neb]"  # library convenience only — not a pin system
-pip install pychum                     # needs rgpycrumbs>=1.9.16
+pip install pychum                     # needs rgpycrumbs>=1.10.4
 
 # Preferred one-shot NEB visualization (isolated uv env via dispatcher):
 rgpycrumbs eon plt-neb --help
